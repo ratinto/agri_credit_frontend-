@@ -4,8 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Phone, Lock, ArrowLeft, Users, Building, Eye, EyeOff } from 'lucide-react';
 import logo from '../assets/logo.png';
 import './LoginPage.css';
-
-import { supabase } from '../lib/supabase';
+import { bankLogin } from '../services/authService';
+import { useAuth } from '../context/AuthContext';
 
 const premiumTransition = {
     duration: 1.4,
@@ -29,34 +29,16 @@ const staggerContainer = {
 
 export default function LoginPage() {
     const [userType, setUserType] = useState('lender');
-    const [phone, setPhone] = useState('');
-    const [otp, setOtp] = useState('');
-    const [bankCode, setBankCode] = useState('');
-    const [bankNumber, setBankNumber] = useState('');
-    const [otpSent, setOtpSent] = useState(false);
+    const [bankId, setBankId] = useState('');
+    const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const navigate = useNavigate();
+    const { login } = useAuth();
 
     // Smooth reveal for brand title
     const brandText = "Agri Credit";
-
-    const handleSendOtp = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        setError(null);
-
-        try {
-            // Simulated delay for premium feel
-            await new Promise(resolve => setTimeout(resolve, 800));
-            setOtpSent(true);
-        } catch (err) {
-            setError(err.message);
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -64,14 +46,26 @@ export default function LoginPage() {
         setError(null);
 
         try {
-            await new Promise(resolve => setTimeout(resolve, 1000));
             if (userType === 'lender') {
+                // Bank login with real API
+                const response = await bankLogin(bankId, password);
+                
+                // Save to auth context
+                login(response.token, {
+                    ...response.bank,
+                    role: 'BANK',
+                    userType: 'lender'
+                });
+
+                // Navigate to lender dashboard
                 navigate('/lender/dashboard');
             } else {
-                navigate('/admin/dashboard');
+                // Admin login (placeholder - can be implemented later)
+                setError('Admin login not yet implemented');
             }
         } catch (err) {
-            setError(err.message);
+            console.error('Login error:', err);
+            setError(err.message || 'Invalid credentials. Please try again.');
         } finally {
             setLoading(false);
         }
@@ -145,23 +139,22 @@ export default function LoginPage() {
                         </AnimatePresence>
 
                         <div className="login-card__type-tabs">
-                            {['lender', 'bank'].map((t, idx) => (
+                            {['lender', 'admin'].map((t, idx) => (
                                 <button
                                     key={t}
                                     className={`login-card__tab ${userType === t ? 'login-card__tab--active' : ''}`}
                                     onClick={() => {
                                         setUserType(t);
-                                        setOtpSent(false);
                                         setError(null);
                                     }}
                                 >
                                     {t === 'lender' ? <Users size={16} /> : <Building size={16} />}
-                                    <span style={{ textTransform: 'capitalize' }}>{t}</span>
+                                    <span style={{ textTransform: 'capitalize' }}>{t === 'lender' ? 'Bank/Lender' : 'Admin'}</span>
                                 </button>
                             ))}
                         </div>
 
-                        <form onSubmit={userType === 'bank' ? handleLogin : (otpSent ? handleLogin : handleSendOtp)} className="login-card__glass-form">
+                        <form onSubmit={handleLogin} className="login-card__glass-form">
                             <AnimatePresence mode="wait">
                                 {userType === 'lender' ? (
                                     <motion.div
@@ -174,38 +167,28 @@ export default function LoginPage() {
                                     >
                                         <div className="login-card__input-group">
                                             <input
-                                                type="tel"
-                                                placeholder="Phone Number"
-                                                value={phone}
-                                                onChange={(e) => setPhone(e.target.value)}
+                                                type="text"
+                                                placeholder="Bank ID (e.g., BNK1004)"
+                                                value={bankId}
+                                                onChange={(e) => setBankId(e.target.value)}
                                                 required
                                                 className="login-card__glass-input"
                                             />
                                         </div>
 
-                                        <AnimatePresence>
-                                            {otpSent && (
-                                                <motion.div
-                                                    className="login-card__input-group"
-                                                    style={{ marginTop: '1.5rem' }}
-                                                    initial={{ opacity: 0, height: 0 }}
-                                                    animate={{ opacity: 1, height: 'auto' }}
-                                                    transition={premiumTransition}
-                                                >
-                                                    <input
-                                                        type={showPassword ? 'text' : 'password'}
-                                                        placeholder="OTP"
-                                                        value={otp}
-                                                        onChange={(e) => setOtp(e.target.value)}
-                                                        required
-                                                        className="login-card__glass-input"
-                                                    />
-                                                    <button type="button" className="login-card__glass-eye" onClick={() => setShowPassword(!showPassword)}>
-                                                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                                                    </button>
-                                                </motion.div>
-                                            )}
-                                        </AnimatePresence>
+                                        <div className="login-card__input-group" style={{ marginTop: '1.5rem' }}>
+                                            <input
+                                                type={showPassword ? 'text' : 'password'}
+                                                placeholder="Password"
+                                                value={password}
+                                                onChange={(e) => setPassword(e.target.value)}
+                                                required
+                                                className="login-card__glass-input"
+                                            />
+                                            <button type="button" className="login-card__glass-eye" onClick={() => setShowPassword(!showPassword)}>
+                                                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                            </button>
+                                        </div>
                                     </motion.div>
                                 ) : (
                                     <motion.div
@@ -219,19 +202,15 @@ export default function LoginPage() {
                                         <div className="login-card__input-group">
                                             <input
                                                 type="text"
-                                                placeholder="Bank Code"
-                                                value={bankCode}
-                                                onChange={(e) => setBankCode(e.target.value)}
+                                                placeholder="Admin ID"
                                                 required
                                                 className="login-card__glass-input"
                                             />
                                         </div>
                                         <div className="login-card__input-group" style={{ marginTop: '1.5rem' }}>
                                             <input
-                                                type="text"
-                                                placeholder="Account Number"
-                                                value={bankNumber}
-                                                onChange={(e) => setBankNumber(e.target.value)}
+                                                type="password"
+                                                placeholder="Admin Password"
                                                 required
                                                 className="login-card__glass-input"
                                             />
@@ -252,17 +231,24 @@ export default function LoginPage() {
                                         animate={{ opacity: [0.4, 1, 0.4] }}
                                         transition={{ repeat: Infinity, duration: 1 }}
                                     >
-                                        Processing...
+                                        Authenticating...
                                     </motion.span>
-                                ) : (userType === 'bank' ? 'Enter Dashboard' : (otpSent ? 'Enter Dashboard' : 'Send OTP'))}
+                                ) : 'Login'}
                             </motion.button>
                         </form>
 
                         <motion.div
                             className="login-card__glass-footer"
                             variants={fadeInUp}
+                            style={{ 
+                                display: 'flex', 
+                                flexDirection: 'column', 
+                                gap: '0.5rem', 
+                                alignItems: 'center' 
+                            }}
                         >
-                            <span>Enterprise access only. All sessions recorded.</span>
+                            <span>Don't have an account? <Link to="/signup" style={{ color: '#3b82f6', textDecoration: 'none', fontWeight: 500 }}>Sign up here</Link></span>
+                            <span style={{ fontSize: '0.85rem', opacity: 0.7 }}>Enterprise access only. All sessions recorded.</span>
                         </motion.div>
                     </motion.div>
                 </div>

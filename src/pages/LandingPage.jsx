@@ -249,7 +249,7 @@ export default function LandingPage() {
                         </p>
 
                         <div className="hero__actions">
-                            <Link to="/lender/dashboard" className="hero__btn hero__btn--primary">
+                            <Link to="/signup" className="hero__btn hero__btn--primary">
                                 <span>Get Started as Lender</span>
                                 <ArrowRight size={18} />
                             </Link>

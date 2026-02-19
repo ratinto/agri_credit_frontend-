@@ -99,15 +99,15 @@
 }
 
 .login-card__logo-wrap {
-    margin-bottom: 3rem;
-    padding: 1.25rem;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 20px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 2.5rem;
+    padding: 0;
+    background: transparent;
+    border-radius: 0;
+    border: none;
 }
 
 .login-card__logo-img {
-    height: 32px;
+    height: 80px;
     object-fit: contain;
     filter: brightness(0) invert(1);
     /* Force white for premium look */

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Users, TrendingUp, AlertTriangle, Shield, DollarSign,
@@ -9,9 +9,16 @@ import {
 } from 'lucide-react';
 import DashboardLayout from '../components/common/DashboardLayout';
 import {
-    lenderStats, riskDistribution, farmersList, fraudAlerts,
-    mlInsights, navLinks, pendingLoans
+    riskDistribution, fraudAlerts,
+    mlInsights, navLinks
 } from '../data/mockData';
+import { 
+    getPendingLoanApplications, 
+    getFarmerProfile,
+    approveLoan,
+    rejectLoan 
+} from '../services/bankService';
+import { useAuth } from '../context/AuthContext';
 import './LenderDashboard.css';
 
 // Animation Variants
@@ -22,11 +29,68 @@ const fadeIn = {
 
 export default function LenderDashboard() {
     const location = useLocation();
-    const [activeTab, setActiveTab] = useState('Overview');
+    const navigate = useNavigate();
+    const { user, isAuthenticated } = useAuth();
+    
+    const [activeTab, setActiveTab] = useState('Dashboard');
     const [searchTerm, setSearchTerm] = useState('');
     const [riskFilter, setRiskFilter] = useState('All');
     const [showDetail, setShowDetail] = useState(false);
     const [selectedFarmer, setSelectedFarmer] = useState(null);
+    
+    // Real data from API
+    const [pendingLoans, setPendingLoans] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [stats, setStats] = useState({
+        totalApplications: 0,
+        avgScore: 0,
+        totalDisbursed: 0,
+        approvalRate: 0
+    });
+
+    // Check authentication
+    useEffect(() => {
+        if (!isAuthenticated()) {
+            navigate('/login');
+        }
+    }, [isAuthenticated, navigate]);
+
+    // Fetch pending loans
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                setLoading(true);
+                const response = await getPendingLoanApplications();
+                
+                if (response.success) {
+                    setPendingLoans(response.data || []);
+                    
+                    // Calculate stats from loans
+                    const loans = response.data || [];
+                    const avgScore = loans.length > 0 
+                        ? loans.reduce((sum, l) => sum + (l.trust_score || 0), 0) / loans.length 
+                        : 0;
+                    
+                    setStats({
+                        totalApplications: loans.length,
+                        avgScore: Math.round(avgScore),
+                        totalDisbursed: loans.reduce((sum, l) => sum + parseFloat(l.loan_amount || 0), 0),
+                        approvalRate: 91.2 // Mock for now
+                    });
+                }
+            } catch (err) {
+                console.error('Error fetching loans:', err);
+                setError(err.message || 'Failed to fetch loan applications');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (isAuthenticated()) {
+            fetchData();
+        }
+    }, [isAuthenticated]);
 
     // Sync activeTab with route
     useEffect(() => {
@@ -39,23 +103,48 @@ export default function LenderDashboard() {
         }
     }, [location]);
 
-    const filteredFarmers = farmersList.filter(f => {
+    // Filter logic for loans (updated to use real data structure)
+    const filteredLoans = pendingLoans.filter(loan => {
         const searchLower = searchTerm.toLowerCase();
         const matchSearch =
-            f.name.toLowerCase().includes(searchLower) ||
-            f.id.toLowerCase().includes(searchLower) ||
-            f.district.toLowerCase().includes(searchLower);
-        const matchRisk = riskFilter === 'All' || f.risk === riskFilter;
+            (loan.farmer_name || '').toLowerCase().includes(searchLower) ||
+            (loan.loan_id || '').toLowerCase().includes(searchLower) ||
+            (loan.farmer_district || '').toLowerCase().includes(searchLower);
+        
+        const riskLevel = loan.risk_level || 'Medium';
+        const matchRisk = riskFilter === 'All' || riskLevel === riskFilter;
+        
         return matchSearch && matchRisk;
     });
 
-    const handleViewFarmer = (farmer) => {
-        setSelectedFarmer(farmer);
-        setShowDetail(true);
+    const handleViewFarmer = async (loan) => {
+        try {
+            const response = await getFarmerProfile(loan.farmer_id);
+            if (response.success) {
+                setSelectedFarmer(response.data);
+                setShowDetail(true);
+            }
+        } catch (err) {
+            console.error('Error fetching farmer:', err);
+            alert('Failed to load farmer details');
+        }
     };
 
+    const bankName = user?.bank_name || 'Bank';
+    const contactPerson = user?.contact_person || 'Officer';
+
+    if (loading) {
+        return (
+            <DashboardLayout links={navLinks.lender} userType="lender" userName={contactPerson}>
+                <div style={{ padding: '2rem', textAlign: 'center' }}>
+                    <p>Loading dashboard...</p>
+                </div>
+            </DashboardLayout>
+        );
+    }
+
     return (
-        <DashboardLayout links={navLinks.lender} userType="lender" userName="Amitesh Pratap Singh">
+        <DashboardLayout links={navLinks.lender} userType="lender" userName={contactPerson}>
             <div className="lender-dash">
                 {/* Header */}
                 <motion.div
@@ -66,12 +155,12 @@ export default function LenderDashboard() {
                 >
                     <div>
                         <h1>Lender <span className="text-gradient">Admin Panel</span></h1>
-                        <p className="lender-dash__subtitle">SBI Varanasi Branch · Officer: Amitesh Pratap Singh</p>
+                        <p className="lender-dash__subtitle">{bankName} · Officer: {contactPerson}</p>
                     </div>
                     <div className="lender-dash__header-actions">
                         <div className="lender-dash__time">
                             <Clock size={16} />
-                            <span>Last login: 2 mins ago</span>
+                            <span>Last login: Just now</span>
                         </div>
                         <button className="lender-dash__notification" onClick={() => setActiveTab('Fraud & Alerts')}>
                             <Bell size={20} />
@@ -94,10 +183,10 @@ export default function LenderDashboard() {
                 </div>
 
                 <div className="lender-dash__content">
-                    {activeTab === 'Dashboard' && <OverviewSection setActiveTab={setActiveTab} />}
+                    {activeTab === 'Dashboard' && <OverviewSection stats={stats} pendingLoans={pendingLoans} setActiveTab={setActiveTab} />}
                     {activeTab === 'Farmers' && (
                         <FarmersSection
-                            filteredFarmers={filteredFarmers}
+                            filteredLoans={filteredLoans}
                             searchTerm={searchTerm}
                             setSearchTerm={setSearchTerm}
                             riskFilter={riskFilter}
@@ -105,7 +194,7 @@ export default function LenderDashboard() {
                             onViewDetail={handleViewFarmer}
                         />
                     )}
-                    {activeTab === 'Loan Decisions' && <DecisionsSection />}
+                    {activeTab === 'Loan Decisions' && <DecisionsSection pendingLoans={pendingLoans} />}
                     {activeTab === 'Portfolio Analytics' && <AnalyticsSection />}
                     {activeTab === 'Fraud & Alerts' && <AlertsSection />}
                     {activeTab === 'Settings & Admin' && <SettingsSection />}
@@ -124,16 +213,16 @@ export default function LenderDashboard() {
 
 // ----- SUB-COMPONENTS -----
 
-function OverviewSection({ setActiveTab }) {
+function OverviewSection({ stats, pendingLoans, setActiveTab }) {
     return (
         <motion.div initial="hidden" animate="visible" variants={{ visible: { transition: { staggerChildren: 0.1 } } }}>
             {/* Key Stats */}
             <div className="lender-dash__stats">
                 {[
-                    { icon: <Users size={22} />, label: 'Total Farmers', value: lenderStats.totalFarmers.toLocaleString(), trend: '+12%', color: '#2D6A4F' },
-                    { icon: <Shield size={22} />, label: 'Avg Trust Score', value: lenderStats.avgScore, trend: '+2.4', color: '#0D9488' },
-                    { icon: <DollarSign size={22} />, label: 'Disbursed AMT', value: `₹${(lenderStats.totalDisbursed / 10000000).toFixed(1)} Cr`, trend: '+₹42L', color: '#D4A017' },
-                    { icon: <Activity size={22} />, label: 'Approval Rate', value: '91.2%', trend: '-0.5%', color: '#3182CE' },
+                    { icon: <Users size={22} />, label: 'Pending Applications', value: stats.totalApplications.toString(), trend: 'New', color: '#2D6A4F' },
+                    { icon: <Shield size={22} />, label: 'Avg Trust Score', value: stats.avgScore.toString(), trend: 'Good', color: '#0D9488' },
+                    { icon: <DollarSign size={22} />, label: 'Total Requested', value: `₹${(stats.totalDisbursed / 100000).toFixed(1)}L`, trend: 'Pending', color: '#D4A017' },
+                    { icon: <Activity size={22} />, label: 'Approval Rate', value: `${stats.approvalRate.toFixed(1)}%`, trend: 'High', color: '#3182CE' },
                 ].map((stat, i) => (
                     <motion.div key={i} className="lender-stat" variants={fadeIn}>
                         <div className="lender-stat__icon" style={{ background: `linear-gradient(135deg, ${stat.color}, ${stat.color}88)` }}>
@@ -142,8 +231,8 @@ function OverviewSection({ setActiveTab }) {
                         <div>
                             <span className="lender-stat__label">{stat.label}</span>
                             <span className="lender-stat__value">{stat.value}</span>
-                            <span className={`lender-stat__trend ${stat.trend.startsWith('+') ? 'text-success' : 'text-danger'}`}>
-                                {stat.trend} <span style={{ fontSize: '10px' }}>vs last month</span>
+                            <span className="lender-stat__trend text-success">
+                                {stat.trend}
                             </span>
                         </div>
                     </motion.div>
@@ -205,14 +294,13 @@ function OverviewSection({ setActiveTab }) {
     );
 }
 
-function FarmersSection({ filteredFarmers, searchTerm, setSearchTerm, riskFilter, setRiskFilter, onViewDetail }) {
+function FarmersSection({ filteredLoans, searchTerm, setSearchTerm, riskFilter, setRiskFilter, onViewDetail }) {
     return (
         <motion.div className="dash-card dash-card--table" initial="hidden" animate="visible" variants={fadeIn}>
             <div className="dash-card__header">
-                <h3>Farmer Directory</h3>
+                <h3>Loan Applications</h3>
                 <div className="dash-card__actions">
-                    <button className="btn-minimal-posh" onClick={() => alert('Exporting Farmer Portfolio CSV...')}><Download size={14} /> Export CSV</button>
-                    <button className="btn-minimal-posh btn-minimal-posh--primary" onClick={() => alert('Launching "Quick Onboarding" flow...')}><Plus size={14} /> Add Farmer</button>
+                    <button className="btn-minimal-posh" onClick={() => alert('Exporting Applications CSV...')}><Download size={14} /> Export CSV</button>
                 </div>
             </div>
 
@@ -241,56 +329,102 @@ function FarmersSection({ filteredFarmers, searchTerm, setSearchTerm, riskFilter
 
             <div className="farmer-table">
                 <div className="farmer-table__header">
-                    <span>Farmer ID</span>
-                    <span>Name</span>
+                    <span>Loan ID</span>
+                    <span>Farmer Name</span>
                     <span>Score</span>
                     <span>Risk Band</span>
+                    <span>Amount</span>
                     <span>District</span>
-                    <span>Land Size</span>
-                    <span>Assigned To</span>
+                    <span>Status</span>
                     <span>Action</span>
                 </div>
-                {filteredFarmers.map((farmer, i) => (
-                    <div key={i} className="farmer-table__row">
-                        <span className="farmer-table__id">{farmer.id}</span>
-                        <span className="farmer-table__name">{farmer.name}</span>
-                        <span>
-                            <span className={`score-badge score-badge--${farmer.score >= 70 ? 'high' : farmer.score >= 50 ? 'med' : 'low'}`}>
-                                {farmer.score}
-                            </span>
-                        </span>
-                        <span>
-                            <span className={`risk-badge risk-badge--${farmer.risk.toLowerCase()}`}>
-                                {farmer.risk}
-                            </span>
-                        </span>
-                        <span>{farmer.district}</span>
-                        <span>{farmer.landSize}</span>
-                        <span>
-                            <select className="officer-select" defaultValue="Unassigned">
-                                <option>Unassigned</option>
-                                <option>A. Singh (RM)</option>
-                                <option>M. Kumar (FO)</option>
-                                <option>S. Devi (BM)</option>
-                            </select>
-                        </span>
-                        <span>
-                            <button className="btn-text" style={{ padding: '0.4rem' }} onClick={() => onViewDetail(farmer)}>
-                                <Eye size={16} />
-                            </button>
-                        </span>
+                {filteredLoans.length === 0 ? (
+                    <div style={{ padding: '2rem', textAlign: 'center', gridColumn: '1 / -1' }}>
+                        <p>No loan applications found</p>
                     </div>
-                ))}
+                ) : (
+                    filteredLoans.map((loan, i) => (
+                        <div key={i} className="farmer-table__row">
+                            <span className="farmer-table__id">{loan.loan_id}</span>
+                            <span className="farmer-table__name">{loan.farmer_name}</span>
+                            <span>
+                                <span className={`score-badge score-badge--${loan.trust_score >= 70 ? 'high' : loan.trust_score >= 50 ? 'med' : 'low'}`}>
+                                    {loan.trust_score || 'N/A'}
+                                </span>
+                            </span>
+                            <span>
+                                <span className={`risk-badge risk-badge--${(loan.risk_level || 'medium').toLowerCase()}`}>
+                                    {loan.risk_level || 'Medium'}
+                                </span>
+                            </span>
+                            <span style={{ fontWeight: 600 }}>₹{parseFloat(loan.loan_amount || 0).toLocaleString()}</span>
+                            <span>{loan.farmer_district || 'N/A'}</span>
+                            <span>
+                                <span className="status-badge" style={{ color: '#D69E2E' }}>
+                                    {loan.loan_status || 'pending'}
+                                </span>
+                            </span>
+                            <span>
+                                <button className="btn-text" style={{ padding: '0.4rem' }} onClick={() => onViewDetail(loan)}>
+                                    <Eye size={16} />
+                                </button>
+                            </span>
+                        </div>
+                    ))
+                )}
             </div>
         </motion.div>
     );
 }
 
-function DecisionsSection() {
+function DecisionsSection({ pendingLoans }) {
     const [decisions, setDecisions] = useState({});
+    const [processing, setProcessing] = useState(null);
 
-    const handleAction = (id, status) => {
-        setDecisions(prev => ({ ...prev, [id]: status }));
+    const handleApprove = async (loan) => {
+        setProcessing(loan.loan_id);
+        try {
+            // Calculate approved amount (90% of requested for demo)
+            const approvedAmount = parseFloat(loan.loan_amount) * 0.9;
+            const interestRate = 8; // Default 8%
+            const tenureMonths = 12; // Default 12 months
+            
+            await approveLoan({
+                loan_id: loan.loan_id,
+                approved_amount: approvedAmount,
+                interest_rate: interestRate,
+                tenure_months: tenureMonths
+            });
+            
+            setDecisions(prev => ({ ...prev, [loan.loan_id]: 'Approved' }));
+            alert(`Loan ${loan.loan_id} approved for ₹${approvedAmount.toLocaleString()}`);
+        } catch (err) {
+            console.error('Approve error:', err);
+            alert('Failed to approve loan: ' + (err.message || 'Unknown error'));
+        } finally {
+            setProcessing(null);
+        }
+    };
+
+    const handleReject = async (loan) => {
+        const reason = prompt('Enter rejection reason:');
+        if (!reason) return;
+        
+        setProcessing(loan.loan_id);
+        try {
+            await rejectLoan({
+                loan_id: loan.loan_id,
+                rejection_reason: reason
+            });
+            
+            setDecisions(prev => ({ ...prev, [loan.loan_id]: 'Rejected' }));
+            alert(`Loan ${loan.loan_id} rejected`);
+        } catch (err) {
+            console.error('Reject error:', err);
+            alert('Failed to reject loan: ' + (err.message || 'Unknown error'));
+        } finally {
+            setProcessing(null);
+        }
     };
 
     return (
@@ -313,46 +447,61 @@ function DecisionsSection() {
                     <span>Current Status</span>
                     <span>Action</span>
                 </div>
-                {pendingLoans.map((loan, i) => (
-                    <div key={i} className="farmer-table__row" style={{ gridTemplateColumns: '100px 1.5fr 100px 120px 100px 1.2fr 180px' }}>
-                        <span className="farmer-table__id">{loan.id}</span>
-                        <span className="farmer-table__name">{loan.name}</span>
-                        <span style={{ fontWeight: 700 }}>₹{loan.amount.toLocaleString()}</span>
-                        <span>{loan.date}</span>
-                        <span>
-                            <span className={`score-badge score-badge--${loan.score >= 70 ? 'high' : loan.score >= 50 ? 'med' : 'low'}`}>
-                                {loan.score}
-                            </span>
-                        </span>
-                        <span>
-                            {decisions[loan.id] ? (
-                                <span className={`status-pill status-pill--${decisions[loan.id].toLowerCase()}`}>
-                                    {decisions[loan.id]}
-                                </span>
-                            ) : (
-                                <span className="status-badge" style={{ color: '#D69E2E' }}>
-                                    <Clock size={12} style={{ marginRight: '4px' }} />
-                                    In Review
-                                </span>
-                            )}
-                        </span>
-                        <span>
-                            {!decisions[loan.id] ? (
-                                <div className="decision-btns-inline">
-                                    <button className="btn-mini btn-mini--success" onClick={() => handleAction(loan.id, 'Approved')}>Approve</button>
-                                    <button className="btn-mini btn-mini--danger" onClick={() => handleAction(loan.id, 'Rejected')}>Reject</button>
-                                </div>
-                            ) : (
-                                <button className="btn-text" style={{ fontSize: '0.75rem', textDecoration: 'underline' }} onClick={() => {
-                                    const next = { ...decisions };
-                                    delete next[loan.id];
-                                    setDecisions(next);
-                                    console.log(`Action for ${loan.id} undone.`);
-                                }}>Undo Action</button>
-                            )}
-                        </span>
+                {pendingLoans.length === 0 ? (
+                    <div style={{ padding: '2rem', textAlign: 'center', gridColumn: '1 / -1' }}>
+                        <p>No pending loan applications</p>
                     </div>
-                ))}
+                ) : (
+                    pendingLoans.map((loan, i) => (
+                        <div key={i} className="farmer-table__row" style={{ gridTemplateColumns: '100px 1.5fr 100px 120px 100px 1.2fr 180px' }}>
+                            <span className="farmer-table__id">{loan.loan_id}</span>
+                            <span className="farmer-table__name">{loan.farmer_name}</span>
+                            <span style={{ fontWeight: 700 }}>₹{parseFloat(loan.loan_amount).toLocaleString()}</span>
+                            <span>{new Date(loan.created_at).toLocaleDateString()}</span>
+                            <span>
+                                <span className={`score-badge score-badge--${loan.trust_score >= 70 ? 'high' : loan.trust_score >= 50 ? 'med' : 'low'}`}>
+                                    {loan.trust_score || 'N/A'}
+                                </span>
+                            </span>
+                            <span>
+                                {decisions[loan.loan_id] ? (
+                                    <span className={`status-pill status-pill--${decisions[loan.loan_id].toLowerCase()}`}>
+                                        {decisions[loan.loan_id]}
+                                    </span>
+                                ) : (
+                                    <span className="status-badge" style={{ color: '#D69E2E' }}>
+                                        <Clock size={12} style={{ marginRight: '4px' }} />
+                                        {loan.loan_status}
+                                    </span>
+                                )}
+                            </span>
+                            <span>
+                                {!decisions[loan.loan_id] && loan.loan_status === 'pending' ? (
+                                    <div className="decision-btns-inline">
+                                        <button 
+                                            className="btn-mini btn-mini--success" 
+                                            onClick={() => handleApprove(loan)}
+                                            disabled={processing === loan.loan_id}
+                                        >
+                                            {processing === loan.loan_id ? 'Processing...' : 'Approve'}
+                                        </button>
+                                        <button 
+                                            className="btn-mini btn-mini--danger" 
+                                            onClick={() => handleReject(loan)}
+                                            disabled={processing === loan.loan_id}
+                                        >
+                                            Reject
+                                        </button>
+                                    </div>
+                                ) : decisions[loan.loan_id] ? (
+                                    <span style={{ fontSize: '0.85rem', color: '#666' }}>Action completed</span>
+                                ) : (
+                                    <span style={{ fontSize: '0.85rem', color: '#666' }}>{loan.loan_status}</span>
+                                )}
+                            </span>
+                        </div>
+                    ))
+                )}
             </div>
         </motion.div>
     );
