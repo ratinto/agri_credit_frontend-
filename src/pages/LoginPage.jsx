@@ -154,25 +154,18 @@ export default function LoginPage() {
                         <motion.div
                             className="login-card__header"
                             variants={fadeInUp}
-                            style={{
-                                textAlign: 'center',
-                                marginBottom: '2rem',
-                                paddingTop: '1rem'
-                            }}
                         >
                             <h2 style={{
-                                fontSize: '1.8rem',
-                                fontWeight: '500',
-                                fontFamily: 'var(--font-serif)',
-                                color: 'var(--color-evergreen)',
+                                fontSize: '1.75rem',
+                                fontWeight: '700',
+                                color: 'white',
                                 marginBottom: '0.5rem'
                             }}>
                                 Bank / Lender Login
                             </h2>
                             <p style={{
                                 fontSize: '0.9rem',
-                                color: 'var(--color-moss)',
-                                opacity: 0.8
+                                opacity: 0.7
                             }}>
                                 Enterprise access for financial institutions
                             </p>
@@ -225,7 +218,7 @@ export default function LoginPage() {
                                     >
                                         Authenticating...
                                     </motion.span>
-                                ) : 'Login'}
+                                ) : 'Log In'}
                             </motion.button>
                         </form>
 
@@ -236,11 +229,10 @@ export default function LoginPage() {
                                 display: 'flex',
                                 flexDirection: 'column',
                                 gap: '0.5rem',
-                                alignItems: 'center',
-                                color: 'var(--color-moss)'
+                                alignItems: 'center'
                             }}
                         >
-                            <span>Don't have an account? <Link to="/signup" style={{ color: 'var(--color-evergreen)', textDecoration: 'none', fontWeight: 600 }}>Sign up here</Link></span>
+                            <span>Don't have an account? <Link to="/signup">Sign up here</Link></span>
                             <span style={{ fontSize: '0.85rem', opacity: 0.7 }}>Enterprise access only. All sessions recorded.</span>
                         </motion.div>
                     </motion.div>

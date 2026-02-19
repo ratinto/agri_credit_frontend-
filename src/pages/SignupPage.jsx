@@ -55,7 +55,7 @@ export default function SignupPage() {
     };
 
     const validateForm = () => {
-        if (!formData.bank_name || !formData.contact_person || !formData.email || 
+        if (!formData.bank_name || !formData.contact_person || !formData.email ||
             !formData.password || !formData.confirmPassword || !formData.license_number) {
             setError('All fields are required');
             return false;
@@ -85,7 +85,7 @@ export default function SignupPage() {
 
     const handleSignup = async (e) => {
         e.preventDefault();
-        
+
         if (!validateForm()) {
             return;
         }
@@ -96,11 +96,11 @@ export default function SignupPage() {
         try {
             const { confirmPassword, ...registrationData } = formData;
             const response = await bankRegister(registrationData);
-            
+
             if (response.success) {
                 setSuccess(true);
                 setRegisteredBankId(response.data.bank_id);
-                
+
                 // Redirect to login after 3 seconds
                 setTimeout(() => {
                     navigate('/login');
@@ -361,21 +361,21 @@ export default function SignupPage() {
                                     >
                                         Creating Account...
                                     </motion.span>
-                                ) : 'Register Bank'}
+                                ) : 'Register Institution'}
                             </motion.button>
                         </form>
 
                         <motion.div
                             className="login-card__glass-footer"
                             variants={fadeInUp}
-                            style={{ 
-                                display: 'flex', 
-                                flexDirection: 'column', 
-                                gap: '0.5rem', 
-                                alignItems: 'center' 
+                            style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '0.5rem',
+                                alignItems: 'center'
                             }}
                         >
-                            <span>Already have an account? <Link to="/login" style={{ color: '#3b82f6', textDecoration: 'none', fontWeight: 500 }}>Login here</Link></span>
+                            <span>Already have an account? <Link to="/login">Login here</Link></span>
                             <span style={{ fontSize: '0.85rem', opacity: 0.7 }}>Enterprise access only. All sessions recorded.</span>
                         </motion.div>
                     </motion.div>

@@ -5,7 +5,9 @@ import {
     Users, TrendingUp, AlertTriangle, Shield, DollarSign,
     Search, Filter, Eye, ChevronRight, ArrowUpRight,
     ArrowDownRight, BarChart3, Brain, Activity, Bell,
-    CheckCircle2, XCircle, Clock, CloudSun, Plus, Download
+    CheckCircle2, XCircle, Clock, CloudSun, Plus, Download,
+    ShieldCheck, AlertCircle, TriangleAlert, SearchCode, Lock, FileText, X,
+    User, Mail, MapPin, Briefcase, Building
 } from 'lucide-react';
 import DashboardLayout from '../components/common/DashboardLayout';
 import {
@@ -38,6 +40,15 @@ export default function LenderDashboard() {
     const [riskFilter, setRiskFilter] = useState('All');
     const [showDetail, setShowDetail] = useState(false);
     const [selectedFarmer, setSelectedFarmer] = useState(null);
+    const [notifications, setNotifications] = useState([]);
+
+    const addNotification = (message, type = 'success') => {
+        const id = Date.now();
+        setNotifications(prev => [...prev, { id, message, type }]);
+        setTimeout(() => {
+            setNotifications(prev => prev.filter(n => n.id !== id));
+        }, 4000);
+    };
 
     // Real data from API
     const [pendingLoans, setPendingLoans] = useState([]);
@@ -49,6 +60,63 @@ export default function LenderDashboard() {
         totalDisbursed: 0,
         approvalRate: 0
     });
+
+    const [processing, setProcessing] = useState(null);
+
+    const handleApproveLoan = async (loanId, amount) => {
+        setProcessing(loanId);
+        try {
+            // Calculate approved amount if not provided
+            const base = pendingLoans.find(l => l.loan_id === loanId)?.loan_amount;
+            const baseNum = typeof base === 'string' ? parseFloat(base) : Number(base);
+            const incoming = typeof amount === 'string' ? parseFloat(amount) : Number(amount);
+            const computed = !isNaN(incoming) && incoming > 0 ? incoming : (!isNaN(baseNum) ? baseNum * 0.9 : 0);
+            const approvedAmount = Math.max(0, Math.round(computed));
+
+            await approveLoan({
+                loan_id: loanId,
+                approved_amount: approvedAmount,
+                interest_rate: 8,
+                tenure_months: 12
+            });
+
+            // Update in place for themed status feedback rather than removing row
+            setPendingLoans(prev => prev.map(l => (
+                l.loan_id === loanId ? { ...l, loan_status: 'approved' } : l
+            )));
+            addNotification(`Loan ${loanId} sanctioned successfully for ₹${Number(approvedAmount).toLocaleString()}`, 'success');
+            if (showDetail) setShowDetail(false);
+        } catch (err) {
+            addNotification(err.message || 'Failed to approve loan', 'error');
+        } finally {
+            setProcessing(null);
+        }
+    };
+
+    const handleRejectLoan = async (loanId, reason) => {
+        if (!reason) {
+            addNotification('Rejection reason is required', 'error');
+            return;
+        }
+        setProcessing(loanId);
+        try {
+            await rejectLoan({
+                loan_id: loanId,
+                rejection_reason: reason
+            });
+
+            // Update in place for themed status feedback rather than removing row
+            setPendingLoans(prev => prev.map(l => (
+                l.loan_id === loanId ? { ...l, loan_status: 'rejected' } : l
+            )));
+            addNotification(`Loan ${loanId} rejected: ${reason}`, 'warning');
+            if (showDetail) setShowDetail(false);
+        } catch (err) {
+            addNotification(err.message || 'Failed to reject loan', 'error');
+        } finally {
+            setProcessing(null);
+        }
+    };
 
     // Check authentication
     useEffect(() => {
@@ -180,7 +248,14 @@ export default function LenderDashboard() {
 
 
                 <div className="lender-dash__content">
-                    {activeTab === 'Dashboard' && <OverviewSection stats={stats} pendingLoans={pendingLoans} setActiveTab={setActiveTab} />}
+                    {activeTab === 'Dashboard' && (
+                        <OverviewSection
+                            stats={stats}
+                            pendingLoans={pendingLoans}
+                            setActiveTab={setActiveTab}
+                            onViewDetail={handleViewFarmer}
+                        />
+                    )}
                     {activeTab === 'Farmers' && (
                         <FarmersSection
                             filteredLoans={filteredLoans}
@@ -191,18 +266,55 @@ export default function LenderDashboard() {
                             onViewDetail={handleViewFarmer}
                         />
                     )}
-                    {activeTab === 'Loan Decisions' && <DecisionsSection pendingLoans={pendingLoans} />}
-                    {activeTab === 'Portfolio Analytics' && <AnalyticsSection />}
-                    {activeTab === 'Fraud & Alerts' && <AlertsSection />}
-                    {activeTab === 'Settings' && <SettingsSection />}
+                    {activeTab === 'Loan Decisions' && (
+                        <DecisionsSection
+                            pendingLoans={pendingLoans}
+                            onApprove={handleApproveLoan}
+                            onReject={handleRejectLoan}
+                            processing={processing}
+                            addNotification={addNotification}
+                        />
+                    )}
+                    {activeTab === 'Portfolio Analytics' && <AnalyticsSection addNotification={addNotification} />}
+                    {activeTab === 'Fraud & Alerts' && (
+                        <AlertsSection
+                            addNotification={addNotification}
+                            stats={stats}
+                        />
+                    )}
+                    {activeTab === 'Settings' && <SettingsSection addNotification={addNotification} />}
                 </div>
 
                 {showDetail && selectedFarmer && (
                     <FarmerDetailModal
                         farmer={selectedFarmer}
                         onClose={() => setShowDetail(false)}
+                        onApprove={handleApproveLoan}
+                        onReject={handleRejectLoan}
+                        processing={processing === (selectedFarmer.loan_id || selectedFarmer.id)}
+                        addNotification={addNotification}
                     />
                 )}
+
+                {/* Notifications Portal */}
+                <div className="posh-toast-container">
+                    <AnimatePresence>
+                        {notifications.map(n => (
+                            <motion.div
+                                key={n.id}
+                                className={`posh-toast posh-toast--${n.type}`}
+                                initial={{ opacity: 0, x: 50, scale: 0.9 }}
+                                animate={{ opacity: 1, x: 0, scale: 1 }}
+                                exit={{ opacity: 0, x: 20, scale: 0.9, transition: { duration: 0.2 } }}
+                            >
+                                {n.type === 'success' && <CheckCircle2 size={18} />}
+                                {n.type === 'error' && <XCircle size={18} />}
+                                {n.type === 'warning' && <AlertTriangle size={18} />}
+                                <span>{n.message}</span>
+                            </motion.div>
+                        ))}
+                    </AnimatePresence>
+                </div>
             </div>
         </DashboardLayout>
     );
@@ -210,7 +322,7 @@ export default function LenderDashboard() {
 
 // ----- SUB-COMPONENTS -----
 
-function OverviewSection({ stats, pendingLoans, setActiveTab }) {
+function OverviewSection({ stats, pendingLoans, setActiveTab, onViewDetail }) {
     return (
         <motion.div initial="hidden" animate="visible" variants={{ visible: { transition: { staggerChildren: 0.1 } } }}>
             {/* Key Stats */}
@@ -288,7 +400,12 @@ function OverviewSection({ stats, pendingLoans, setActiveTab }) {
                                 <span className="score-val">{f.score}</span>
                                 <span className="score-label">Trust Score</span>
                             </div>
-                            <button className="btn-mini btn-mini--success">Pre-Approve</button>
+                            <button
+                                className="btn-mini btn-mini--success"
+                                onClick={() => onViewDetail(f)}
+                            >
+                                Review
+                            </button>
                         </div>
                     ))}
                 </div>
@@ -303,7 +420,7 @@ function FarmersSection({ filteredLoans, searchTerm, setSearchTerm, riskFilter, 
             <div className="dash-card__header">
                 <h3>Loan Applications</h3>
                 <div className="dash-card__actions">
-                    <button className="btn-minimal-posh" onClick={() => alert('Exporting Applications CSV...')}><Download size={14} /> Export CSV</button>
+                    <button className="btn-minimal-posh" onClick={() => addNotification('Exporting Applications CSV...', 'success')}><Download size={14} /> Export CSV</button>
                 </div>
             </div>
 
@@ -380,53 +497,15 @@ function FarmersSection({ filteredLoans, searchTerm, setSearchTerm, riskFilter, 
     );
 }
 
-function DecisionsSection({ pendingLoans }) {
-    const [decisions, setDecisions] = useState({});
-    const [processing, setProcessing] = useState(null);
-
-    const handleApprove = async (loan) => {
-        setProcessing(loan.loan_id);
-        try {
-            // Calculate approved amount (90% of requested for demo)
-            const approvedAmount = parseFloat(loan.loan_amount) * 0.9;
-            const interestRate = 8; // Default 8%
-            const tenureMonths = 12; // Default 12 months
-
-            await approveLoan({
-                loan_id: loan.loan_id,
-                approved_amount: approvedAmount,
-                interest_rate: interestRate,
-                tenure_months: tenureMonths
-            });
-
-            setDecisions(prev => ({ ...prev, [loan.loan_id]: 'Approved' }));
-            alert(`Loan ${loan.loan_id} approved for ₹${approvedAmount.toLocaleString()}`);
-        } catch (err) {
-            console.error('Approve error:', err);
-            alert('Failed to approve loan: ' + (err.message || 'Unknown error'));
-        } finally {
-            setProcessing(null);
-        }
+function DecisionsSection({ pendingLoans, onApprove, onReject, processing, addNotification }) {
+    const handleApprove = (loan) => {
+        onApprove(loan.loan_id, loan.loan_amount);
     };
 
-    const handleReject = async (loan) => {
-        const reason = prompt('Enter rejection reason:');
-        if (!reason) return;
-
-        setProcessing(loan.loan_id);
-        try {
-            await rejectLoan({
-                loan_id: loan.loan_id,
-                rejection_reason: reason
-            });
-
-            setDecisions(prev => ({ ...prev, [loan.loan_id]: 'Rejected' }));
-            alert(`Loan ${loan.loan_id} rejected`);
-        } catch (err) {
-            console.error('Reject error:', err);
-            alert('Failed to reject loan: ' + (err.message || 'Unknown error'));
-        } finally {
-            setProcessing(null);
+    const handleReject = (loan) => {
+        const reason = window.prompt('Enter rejection reason for ' + loan.loan_id + ':');
+        if (reason) {
+            onReject(loan.loan_id, reason);
         }
     };
 
@@ -435,8 +514,8 @@ function DecisionsSection({ pendingLoans }) {
             <div className="dash-card__header">
                 <h3>Loan Review Queue</h3>
                 <div className="dash-card__actions">
-                    <button className="btn-minimal-posh" onClick={() => alert('Opening Queue Filters...')}><Filter size={14} /> Filter Queue</button>
-                    <button className="btn-minimal-posh" onClick={() => alert('Exporting Decisions Ledger...')}><Download size={14} /> Export</button>
+                    <button className="btn-minimal-posh" onClick={() => addNotification('Filters applied successfully', 'success')}><Filter size={14} /> Filter Queue</button>
+                    <button className="btn-minimal-posh" onClick={() => addNotification('Ledger export started. Your download will begin shortly.', 'success')}><Download size={14} /> Export</button>
                 </div>
             </div>
 
@@ -467,19 +546,13 @@ function DecisionsSection({ pendingLoans }) {
                                 </span>
                             </span>
                             <span>
-                                {decisions[loan.loan_id] ? (
-                                    <span className={`status-pill status-pill--${decisions[loan.loan_id].toLowerCase()}`}>
-                                        {decisions[loan.loan_id]}
-                                    </span>
-                                ) : (
-                                    <span className="status-badge" style={{ color: '#D69E2E' }}>
-                                        <Clock size={12} style={{ marginRight: '4px' }} />
-                                        {loan.loan_status}
-                                    </span>
-                                )}
+                                <span className="status-badge" style={{ color: '#D69E2E' }}>
+                                    <Clock size={12} style={{ marginRight: '4px' }} />
+                                    {loan.loan_status}
+                                </span>
                             </span>
                             <span>
-                                {!decisions[loan.loan_id] && loan.loan_status === 'pending' ? (
+                                {(loan.loan_status === 'pending' || loan.loan_status === 'In Review') ? (
                                     <div className="decision-btns-inline">
                                         <button
                                             className="btn-mini btn-mini--success"
@@ -496,8 +569,10 @@ function DecisionsSection({ pendingLoans }) {
                                             Reject
                                         </button>
                                     </div>
-                                ) : decisions[loan.loan_id] ? (
-                                    <span style={{ fontSize: '0.85rem', color: '#666' }}>Action completed</span>
+                                ) : (loan.loan_status && loan.loan_status.toLowerCase() === 'approved') ? (
+                                    <button className="btn-mini btn-mini--success is-done" disabled>Approved</button>
+                                ) : (loan.loan_status && loan.loan_status.toLowerCase() === 'rejected') ? (
+                                    <button className="btn-mini btn-mini--danger is-done" disabled>Rejected</button>
                                 ) : (
                                     <span style={{ fontSize: '0.85rem', color: '#666' }}>{loan.loan_status}</span>
                                 )}
@@ -647,143 +722,556 @@ function AnalyticsSection() {
     );
 }
 
-function AlertsSection() {
+function AlertsSection({ addNotification, stats }) {
     const [dismissed, setDismissed] = useState([]);
+    const [openReportId, setOpenReportId] = useState(null);
+    const [alertActions, setAlertActions] = useState({});
+
+    useEffect(() => {
+        try {
+            const savedActions = localStorage.getItem('lender.alertActions');
+            if (savedActions) {
+                setAlertActions(JSON.parse(savedActions));
+            }
+            const savedDismissed = localStorage.getItem('lender.dismissedAlerts');
+            if (savedDismissed) {
+                setDismissed(JSON.parse(savedDismissed));
+            }
+        } catch (_) { /* ignore */ }
+    }, []);
+
+    useEffect(() => {
+        try {
+            localStorage.setItem('lender.alertActions', JSON.stringify(alertActions));
+        } catch (_) { /* ignore */ }
+    }, [alertActions]);
+
+    useEffect(() => {
+        try {
+            localStorage.setItem('lender.dismissedAlerts', JSON.stringify(dismissed));
+        } catch (_) { /* ignore */ }
+    }, [dismissed]);
 
     const handleDismiss = (id) => {
         setDismissed(prev => [...prev, id]);
     };
 
     const activeAlerts = fraudAlerts.filter(a => !dismissed.includes(a.id));
+    const highPriorityCount = activeAlerts.filter(a => a.severity === 'High').length;
 
     return (
         <motion.div className="lender-alerts" initial="hidden" animate="visible" variants={fadeIn}>
-            <div className="alerts-summary">
-                <div className="dash-card alert-stat--high">
-                    <AlertTriangle size={24} />
-                    <div>
-                        <h4>High Priority</h4>
-                        <span className="alert-count">{activeAlerts.filter(a => a.severity === 'High').length} Pending</span>
+            {/* Governance & Health Summary */}
+            <div className="alerts-governance">
+                <div className="governance-card">
+                    <div className="gov-header">
+                        <div className="gov-title">
+                            <ShieldCheck size={20} />
+                            <h3>Security & Compliance Posture</h3>
+                        </div>
+                        <span className="gov-status-tag">System Live</span>
+                    </div>
+                    <div className="gov-metrics">
+                        <div className="gov-metric">
+                            <span className="gov-val">{highPriorityCount}</span>
+                            <span className="gov-label">Critical Alerts</span>
+                        </div>
+                        <div className="gov-metric">
+                            <span className="gov-val">100%</span>
+                            <span className="gov-label">Verification Rate</span>
+                        </div>
+                        <div className="gov-metric">
+                            <span className="gov-val">0.4%</span>
+                            <span className="gov-label">Est. Fraud Rate</span>
+                        </div>
+                    </div>
+                    <div className="gov-footer">
+                        <div className="integrity-bar">
+                            <div className="integrity-fill" style={{ width: '98%' }}></div>
+                        </div>
+                        <span className="integrity-label">Data Integrity Score: 98.4%</span>
                     </div>
                 </div>
-                <div className="dash-card alert-stat--med">
-                    <Shield size={24} />
-                    <div>
-                        <h4>Security Ops</h4>
-                        <span className="alert-count">{activeAlerts.length} Active Watches</span>
+
+                <div className="security-stats-mini">
+                    <div className="stat-pill-posh alert-stat--high">
+                        <AlertCircle size={16} />
+                        <span>{highPriorityCount} High Priority Alerts</span>
+                    </div>
+                    <div className="stat-pill-posh alert-stat--med">
+                        <Eye size={16} />
+                        <span>{activeAlerts.length - highPriorityCount} Active Watches</span>
                     </div>
                 </div>
             </div>
 
-            <div className="fraud-alerts" style={{ marginTop: '2rem' }}>
-                <AnimatePresence>
-                    {activeAlerts.length > 0 ? activeAlerts.map((alert) => (
-                        <motion.div
-                            key={alert.id}
-                            className={`fraud-alert fraud-alert--${alert.severity.toLowerCase()}`}
-                            initial={{ x: -20, opacity: 0 }}
-                            animate={{ x: 0, opacity: 1 }}
-                            exit={{ x: 50, opacity: 0 }}
-                            whileHover={{ x: 10 }}
-                            layout
-                        >
-                            <div className="fraud-alert__header">
-                                <div className="fraud-alert__main">
-                                    <div className="fraud-alert__icon">
-                                        {alert.severity === 'High' ? <AlertTriangle size={18} /> : <Shield size={18} />}
+            <div className="alerts-feed-container">
+                <div className="alerts-feed-header">
+                    <h4>Recent Security Events</h4>
+                    <button className="btn-text" onClick={() => setDismissed([])}>Refresh Logs</button>
+                </div>
+
+                <div className="fraud-alerts">
+                    <AnimatePresence mode='popLayout'>
+                        {activeAlerts.length > 0 ? activeAlerts.map((alert) => (
+                            <motion.div
+                                key={alert.id}
+                                className={`fraud-alert-posh fraud-alert--${alert.severity.toLowerCase()}`}
+                                initial={{ y: 20, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                exit={{ scale: 0.9, opacity: 0 }}
+                                layout
+                            >
+                                <div className="alert-side-accent" />
+                                <div className="alert-content-main">
+                                    <div className="alert-top-row">
+                                        <div className="alert-type-group">
+                                            <div className="alert-icon-wrap">
+                                                {alert.severity === 'High' ? <TriangleAlert size={18} /> : <SearchCode size={18} />}
+                                            </div>
+                                            <div>
+                                                <span className="alert-type-label">{alert.type}</span>
+                                                <span className="alert-id-tag">{alert.id}</span>
+                                            </div>
+                                        </div>
+                                        <div className="alert-badge-group">
+                                            <span className={`severity-badge severity--${alert.severity.toLowerCase()}`}>
+                                                {alert.severity}
+                                            </span>
+                                            <span className="alert-time-tag">{alert.date}</span>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <span className="fraud-alert__type">{alert.type}</span>
-                                        <p className="fraud-alert__message">{alert.message}</p>
+
+                                    <div className="alert-body-posh">
+                                        <p className="alert-msg">{alert.message}</p>
+                                        <div className="alert-context-crumbs">
+                                            <span>Farmer ID: <strong>{alert.farmerId}</strong></span>
+                                            <span className="crumb-sep" />
+                                            <span>District: <strong>Varanasi</strong></span>
+                                        </div>
                                     </div>
+
+                                    <div className="alert-actions-posh">
+                                        <div className="primary-actions">
+                                            <button
+                                                className="btn-posh-solid-danger"
+                                                onClick={() => {
+                                                    setAlertActions(prev => {
+                                                        const curr = prev[alert.id] || {};
+                                                        if (curr.frozen) return prev;
+                                                        const next = { ...prev, [alert.id]: { ...curr, frozen: true } };
+                                                        return next;
+                                                    });
+                                                    addNotification('Account freeze protocol initiated for security.', 'warning');
+                                                }}
+                                                disabled={alertActions[alert.id]?.frozen}
+                                                title={alertActions[alert.id]?.frozen ? 'Account Frozen' : 'Freeze Account'}
+                                            >
+                                                <Lock size={14} />
+                                                {alertActions[alert.id]?.frozen ? 'Frozen' : 'Freeze Account'}
+                                            </button>
+                                            <button
+                                                className="btn-posh-subtle"
+                                                onClick={() => {
+                                                    setOpenReportId(prev => prev === alert.id ? null : alert.id);
+                                                }}
+                                            >
+                                                <FileText size={14} />
+                                                Full Report
+                                            </button>
+                                        </div>
+                                        <button className="btn-icon-only-dismiss" title="Mark as Resolved" onClick={() => handleDismiss(alert.id)}>
+                                            <X size={18} />
+                                        </button>
+                                    </div>
+                                    {Boolean(alertActions[alert.id]?.frozen || alertActions[alert.id]?.escalated || alertActions[alert.id]?.watchDays) && (
+                                        <div className="alert-action-chips">
+                                            {alertActions[alert.id]?.frozen && <span className="status-chip status-chip--frozen">Frozen</span>}
+                                            {alertActions[alert.id]?.escalated && <span className="status-chip status-chip--escalated">Escalated</span>}
+                                            {alertActions[alert.id]?.watchDays ? (
+                                                <span className="status-chip status-chip--watch">Watch +{alertActions[alert.id].watchDays}d</span>
+                                            ) : null}
+                                        </div>
+                                    )}
+                                    <AnimatePresence>
+                                        {openReportId === alert.id && (
+                                            <motion.div
+                                                className="alert-report-card"
+                                                initial={{ opacity: 0, y: 10 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                exit={{ opacity: 0, y: -6 }}
+                                            >
+                                                <div className="report-header">
+                                                    <div className="report-title">
+                                                        <FileText size={16} />
+                                                        <strong>Forensic Report</strong>
+                                                        <span className="report-id">• {alert.id}</span>
+                                                    </div>
+                                                    <button className="btn-minimal-posh" onClick={() => setOpenReportId(null)}>Close</button>
+                                                </div>
+                                                <div className="report-grid">
+                                                    <div className="report-block">
+                                                        <span className="report-label">Summary</span>
+                                                        <p className="report-text">
+                                                            {alert.message} Detected anomaly severity marked as <strong>{alert.severity}</strong>.
+                                                            Automated checks cross‑referenced satellite yield estimates and mandi price trends.
+                                                        </p>
+                                                    </div>
+                                                    <div className="report-block">
+                                                        <span className="report-label">Signals</span>
+                                                        <ul className="report-list">
+                                                            <li>NDVI deviation +28% vs regional mean</li>
+                                                            <li>Yield declaration +3x vs peer cohort</li>
+                                                            <li>Weather normalization indicates no flood/drought outlier</li>
+                                                        </ul>
+                                                    </div>
+                                                    <div className="report-block">
+                                                        <span className="report-label">Next Actions</span>
+                                                        <div className="report-actions">
+                                                            <button
+                                                                className="btn-mini btn-mini--success"
+                                                                onClick={() => {
+                                                                    setAlertActions(prev => {
+                                                                        const curr = prev[alert.id] || {};
+                                                                        if (curr.escalated) return prev;
+                                                                        const next = { ...prev, [alert.id]: { ...curr, escalated: true } };
+                                                                        return next;
+                                                                    });
+                                                                    addNotification('Case escalated to compliance queue.', 'success');
+                                                                }}
+                                                                disabled={alertActions[alert.id]?.escalated}
+                                                            >
+                                                                {alertActions[alert.id]?.escalated ? 'Escalated' : 'Escalate Case'}
+                                                            </button>
+                                                            <button
+                                                                className="btn-mini"
+                                                                onClick={() => {
+                                                                    setAlertActions(prev => {
+                                                                        const curr = prev[alert.id] || {};
+                                                                        const days = (curr.watchDays || 0) + 7;
+                                                                        return { ...prev, [alert.id]: { ...curr, watchDays: days } };
+                                                                    });
+                                                                    addNotification('Monitoring window extended by 7 days.', 'success');
+                                                                }}
+                                                            >
+                                                                Extend Watch
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
                                 </div>
-                                <span className={`fraud-alert__severity fraud-alert__severity--${alert.severity.toLowerCase()}`}>
-                                    {alert.severity}
-                                </span>
+                            </motion.div>
+                        )) : (
+                            <div className="empty-state-elegant">
+                                <div className="empty-icon-ring">
+                                    <ShieldCheck size={32} />
+                                </div>
+                                <h4>System Secured</h4>
+                                <p>No active security threats or compliance flags detected in current cycle.</p>
+                                <button className="btn-minimal-posh--primary" onClick={() => setDismissed([])}>View History</button>
                             </div>
-                            <div className="fraud-alert__footer">
-                                <div className="fraud-alert__meta">
-                                    <span>Farmer ID: <strong>{alert.farmerId}</strong></span>
-                                    <span className="dot-sep" />
-                                    <span>Detected: <strong>{alert.date}</strong></span>
-                                </div>
-                                <div className="fraud-alert__actions">
-                                    <button className="btn-posh-danger" style={{ padding: '0.4rem 0.8rem', fontSize: '0.75rem' }} onClick={() => alert(`Account for ${alert.farmerId} has been temporarily frozen. Protocols initiated.`)}>Freeze Account</button>
-                                    <button className="btn-text text-muted" onClick={() => handleDismiss(alert.id)}>Dismiss</button>
-                                </div>
-                            </div>
-                        </motion.div>
-                    )) : (
-                        <div className="empty-state-posh">
-                            <CheckCircle2 size={48} className="text-success" />
-                            <h4>System Secured</h4>
-                            <p>All fraud alerts have been addressed or dismissed.</p>
-                            <button className="btn-outline" onClick={() => setDismissed([])}>Restore History</button>
-                        </div>
-                    )}
-                </AnimatePresence>
+                        )}
+                    </AnimatePresence>
+                </div>
             </div>
         </motion.div>
     );
 }
 
-function SettingsSection() {
+function SettingsSection({ addNotification, user }) {
+    const [settingsTab, setSettingsTab] = useState('Account');
+    const [profileData, setProfileData] = useState({
+        name: user?.contact_person || 'Shreya Narayani',
+        email: user?.email || 'shreya@agricredit.ai',
+        bank: user?.bank_name || 'HDFC Bank - Rural Division',
+        designation: 'Senior Credit Officer',
+        branch: 'Varanasi North',
+        phone: '+91 98XXX XXX10'
+    });
+
+    // Toggles State
+    const [toggles, setToggles] = useState({
+        dailyReports: true,
+        fraudPushes: false,
+        aiAudits: true
+    });
+
+    // Functional State for Modals/Expanders
+    const [activeControl, setActiveControl] = useState(null); // 'limits', 'team', 'logs'
+
+    const handleSaveProfile = (e) => {
+        e.preventDefault();
+        addNotification('Profile updated successfully', 'success');
+    };
+
+    const handleToggle = (key) => {
+        setToggles(prev => ({ ...prev, [key]: !prev[key] }));
+        addNotification(`Preference updated: ${key.replace(/([A-Z])/g, ' $1').toLowerCase()}`, 'success');
+    };
+
     return (
-        <motion.div initial="hidden" animate="visible" variants={fadeIn}>
-            <div className="dash-card">
-                <h3>System Governance & Settings</h3>
-                <p className="text-muted" style={{ marginBottom: '2rem' }}>Manage branch-level configurations and ethical AI guardrails.</p>
-
-                <div className="settings-list">
-                    <div className="settings-item">
-                        <div>
-                            <h4>Dynamic Risk Thresholds</h4>
-                            <p>Current: 45 Minimum Agri-Trust Score for auto-approval</p>
-                        </div>
-                        <button className="btn-minimal-posh" onClick={() => alert('Opening Risk Threshold config...')}>Adjust Limits</button>
-                    </div>
-                    <div className="settings-item">
-                        <div>
-                            <h4>Branch Officer Access</h4>
-                            <p>Manage permissions for 8 dashboard users in Varanasi Branch</p>
-                        </div>
-                        <button className="btn-minimal-posh" onClick={() => alert('Opening Team Management...')}>Manage Team</button>
-                    </div>
-                    <div className="settings-item">
-                        <div>
-                            <h4>Ethical AI Audit Logs</h4>
-                            <p>Download explainability reports for recent automated rejections</p>
-                        </div>
-                        <button className="btn-minimal-posh" onClick={() => alert('Generating AI Explainability PDF...')}>View Logs</button>
-                    </div>
-                </div>
+        <motion.div initial="hidden" animate="visible" variants={fadeIn} className="posh-settings-container">
+            <div className="settings-nav-pills">
+                {['Account', 'System', 'Security'].map(tab => (
+                    <button
+                        key={tab}
+                        className={`settings-pill ${settingsTab === tab ? 'settings-pill--active' : ''}`}
+                        onClick={() => {
+                            setSettingsTab(tab);
+                            setActiveControl(null);
+                        }}
+                    >
+                        {tab === 'Account' && <User size={16} />}
+                        {tab === 'System' && <ShieldCheck size={16} />}
+                        {tab === 'Security' && <Lock size={16} />}
+                        {tab}
+                    </button>
+                ))}
             </div>
 
-            <div className="dash-card" style={{ marginTop: '2rem' }}>
-                <h3>Platform Notifications</h3>
-                <div className="settings-list">
-                    <div className="settings-item">
-                        <div>
-                            <h4>High-Risk Fraud Alerts</h4>
-                            <p>SMS and Email alerts for immediate review</p>
+            <div className="settings-content-wrapper">
+                {settingsTab === 'Account' && (
+                    <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
+                        <div className="dash-card profile-card-posh">
+                            <div className="profile-header-posh">
+                                <div className="profile-avatar-large">
+                                    <span>{profileData.name.charAt(0)}</span>
+                                    <div className="avatar-edit-badge"><Plus size={14} /></div>
+                                </div>
+                                <div className="profile-title-posh">
+                                    <h3>{profileData.name}</h3>
+                                    <p>{profileData.designation} • {profileData.bank}</p>
+                                </div>
+                            </div>
+
+                            <form className="posh-form" onSubmit={handleSaveProfile}>
+                                <div className="form-grid-posh">
+                                    <div className="form-group-posh">
+                                        <label><User size={14} /> Full Name</label>
+                                        <input
+                                            type="text"
+                                            value={profileData.name}
+                                            onChange={e => setProfileData({ ...profileData, name: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="form-group-posh">
+                                        <label><Mail size={14} /> Email Address</label>
+                                        <input
+                                            type="email"
+                                            value={profileData.email}
+                                            onChange={e => setProfileData({ ...profileData, email: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="form-group-posh">
+                                        <label><Building size={14} /> Bank Institution</label>
+                                        <input
+                                            type="text"
+                                            value={profileData.bank}
+                                            onChange={e => setProfileData({ ...profileData, bank: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="form-group-posh">
+                                        <label><Briefcase size={14} /> Role / Designation</label>
+                                        <input
+                                            type="text"
+                                            value={profileData.designation}
+                                            onChange={e => setProfileData({ ...profileData, designation: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="form-group-posh">
+                                        <label><MapPin size={14} /> Assigned Branch</label>
+                                        <input
+                                            type="text"
+                                            value={profileData.branch}
+                                            onChange={e => setProfileData({ ...profileData, branch: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="form-group-posh">
+                                        <label><Activity size={14} /> Contact Number</label>
+                                        <input
+                                            type="text"
+                                            value={profileData.phone}
+                                            onChange={e => setProfileData({ ...profileData, phone: e.target.value })}
+                                        />
+                                    </div>
+                                </div>
+                                <div className="form-actions-posh">
+                                    <button type="submit" className="btn-posh-solid">Save Profile Changes</button>
+                                </div>
+                            </form>
                         </div>
-                        <div className="toggle-placeholder" style={{ width: '40px', height: '20px', background: '#2D6A4F', borderRadius: '20px' }} />
-                    </div>
-                    <div className="settings-item">
-                        <div>
-                            <h4>Daily Portfolio Summary</h4>
-                            <p>End-of-day reports on disbursements and collections</p>
+                    </motion.div>
+                )}
+
+                {settingsTab === 'System' && (
+                    <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
+                        <div className="dash-card">
+                            <div className="settings-group-header">
+                                <ShieldCheck size={20} className="text-posh" />
+                                <div>
+                                    <h3>System Governance</h3>
+                                    <p>Configure risk parameters and branch-wide ethical AI guardrails.</p>
+                                </div>
+                            </div>
+
+                            <div className="settings-list-posh">
+                                <div className="settings-row-posh">
+                                    <div className="row-text">
+                                        <h4>Dynamic Risk Thresholds</h4>
+                                        <p>Current: 45 Minimum Agri-Trust Score for auto-approval</p>
+                                    </div>
+                                    <button
+                                        className={`btn-minimal-posh ${activeControl === 'limits' ? 'active' : ''}`}
+                                        onClick={() => setActiveControl(activeControl === 'limits' ? null : 'limits')}
+                                    >
+                                        {activeControl === 'limits' ? 'Hide Details' : 'Adjust Limits'}
+                                    </button>
+                                </div>
+
+                                <AnimatePresence>
+                                    {activeControl === 'limits' && (
+                                        <motion.div
+                                            className="control-expander-posh"
+                                            initial={{ height: 0, opacity: 0 }}
+                                            animate={{ height: 'auto', opacity: 1 }}
+                                            exit={{ height: 0, opacity: 0 }}
+                                        >
+                                            <div className="limit-adjuster-grid">
+                                                <div className="limit-slider-box">
+                                                    <label>Min. Trust Score</label>
+                                                    <input type="range" min="0" max="100" defaultValue="45" className="posh-range" />
+                                                    <div className="range-labels"><span>0</span><span>100</span></div>
+                                                </div>
+                                                <div className="limit-slider-box">
+                                                    <label>Auto-Disbursement Max (₹)</label>
+                                                    <input type="range" min="10000" max="500000" step="10000" defaultValue="50000" className="posh-range" />
+                                                    <div className="range-labels"><span>10k</span><span>5L</span></div>
+                                                </div>
+                                            </div>
+                                            <button className="btn-posh-mini" onClick={() => {
+                                                addNotification('Global risk parameters updated.', 'success');
+                                                setActiveControl(null);
+                                            }}>Confirm Changes</button>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+
+                                <div className="settings-row-posh">
+                                    <div className="row-text">
+                                        <h4>Branch Officer Privileges</h4>
+                                        <p>Manage access control for 8 active field officers</p>
+                                    </div>
+                                    <button
+                                        className={`btn-minimal-posh ${activeControl === 'team' ? 'active' : ''}`}
+                                        onClick={() => setActiveControl(activeControl === 'team' ? null : 'team')}
+                                    >
+                                        {activeControl === 'team' ? 'Hide Team' : 'Manage Team'}
+                                    </button>
+                                </div>
+
+                                <AnimatePresence>
+                                    {activeControl === 'team' && (
+                                        <motion.div
+                                            className="control-expander-posh"
+                                            initial={{ height: 0, opacity: 0 }}
+                                            animate={{ height: 'auto', opacity: 1 }}
+                                            exit={{ height: 0, opacity: 0 }}
+                                        >
+                                            <div className="team-mini-list">
+                                                {[
+                                                    { name: 'Amit Kumar', role: 'Lead Field Officer', status: 'Active' },
+                                                    { name: 'Priya Sharma', role: 'Credit Analyst', status: 'Active' },
+                                                    { name: 'Rohan Verma', role: 'Verification Agent', status: 'On Leave' }
+                                                ].map((member, idx) => (
+                                                    <div key={idx} className="team-member-row">
+                                                        <div className="member-info">
+                                                            <strong>{member.name}</strong>
+                                                            <span>{member.role}</span>
+                                                        </div>
+                                                        <span className={`status-dot ${member.status.toLowerCase().replace(' ', '-')}`}>{member.status}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            <button className="btn-posh-mini btn-posh-mini--outline" onClick={() => addNotification('Team directory exported.', 'success')}>Export Details</button>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </div>
                         </div>
-                        <div className="toggle-placeholder" style={{ width: '40px', height: '20px', background: '#CBD5E0', borderRadius: '20px' }} />
-                    </div>
-                </div>
+                    </motion.div>
+                )}
+
+                {settingsTab === 'Security' && (
+                    <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
+                        <div className="dash-card">
+                            <div className="settings-group-header">
+                                <Lock size={20} className="text-posh" />
+                                <div>
+                                    <h3>Security & Privacy</h3>
+                                    <p>Manage your login sessions and notification protocols.</p>
+                                </div>
+                            </div>
+
+                            <div className="settings-list-posh">
+                                <div className="settings-row-posh">
+                                    <div className="row-text">
+                                        <h4>Daily Disbursement Reports</h4>
+                                        <p>Receive automated PDF summaries at 08:00 PM IST</p>
+                                    </div>
+                                    <div
+                                        className={`posh-toggle ${toggles.dailyReports ? 'posh-toggle--active' : ''}`}
+                                        onClick={() => handleToggle('dailyReports')}
+                                    >
+                                        <div className="toggle-dot" />
+                                    </div>
+                                </div>
+                                <div className="settings-row-posh">
+                                    <div className="row-text">
+                                        <h4>High-Risk Fraud Pushes</h4>
+                                        <p>Immediate SMS alerts for critical security events</p>
+                                    </div>
+                                    <div
+                                        className={`posh-toggle ${toggles.fraudPushes ? 'posh-toggle--active' : ''}`}
+                                        onClick={() => handleToggle('fraudPushes')}
+                                    >
+                                        <div className="toggle-dot" />
+                                    </div>
+                                </div>
+                                <div className="settings-row-posh">
+                                    <div className="row-text">
+                                        <h4>Encryption Audit Logs</h4>
+                                        <p>View full audit trail of data access</p>
+                                    </div>
+                                    <button className="btn-minimal-posh" onClick={() => addNotification('Audit logs exported to secure vault.', 'success')}>View Logs</button>
+                                </div>
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
             </div>
         </motion.div>
     );
 }
 
-function FarmerDetailModal({ farmer, onClose }) {
+function FarmerDetailModal({ farmer, onClose, onApprove, onReject, processing, addNotification }) {
     const [localTab, setLocalTab] = useState('Overview');
+    const [auditRequested, setAuditRequested] = useState(false);
+
+    const handleApprove = () => {
+        const loanId = farmer.loan_id || farmer.id || 'N/A';
+        onApprove(loanId, farmer.loanAmount);
+    };
+
+    const handleReject = () => {
+        const loanId = farmer.loan_id || farmer.id || 'N/A';
+        const reason = window.prompt('Enter rejection reason for ' + loanId + ':');
+        if (reason) {
+            onReject(loanId, reason);
+        }
+    };
 
     return (
         <motion.div
@@ -924,6 +1412,70 @@ function FarmerDetailModal({ farmer, onClose }) {
                                 </div>
                             )}
 
+                            {localTab === 'Risk & Fraud' && (
+                                <div className="detail-section">
+                                    <h4 className="section-title">Risk Signals & Fraud Checks</h4>
+                                    {(() => {
+                                        const alerts = fraudAlerts.filter(a => a.farmerId === (farmer.id || farmer.farmer_id));
+                                        if (alerts.length === 0) {
+                                            return (
+                                                <div className="empty-state-posh" style={{ background: '#f8faf9' }}>
+                                                    <div className="empty-icon-ring">
+                                                        <ShieldCheck size={28} />
+                                                    </div>
+                                                    <h4>No Active Fraud Signals</h4>
+                                                    <p>All automated verification checks are currently passing for this farmer.</p>
+                                                </div>
+                                            );
+                                        }
+                                        return alerts.map(alert => (
+                                            <div key={alert.id} className={`fraud-alert-posh fraud-alert--${alert.severity.toLowerCase()}`} style={{ marginTop: '1rem' }}>
+                                                <div className="alert-side-accent" />
+                                                <div className="alert-content-main">
+                                                    <div className="alert-top-row">
+                                                        <div className="alert-type-group">
+                                                            <div className="alert-icon-wrap">
+                                                                {alert.severity === 'High' ? <TriangleAlert size={18} /> : <SearchCode size={18} />}
+                                                            </div>
+                                                            <div>
+                                                                <span className="alert-type-label">{alert.type}</span>
+                                                                <span className="alert-id-tag">{alert.id}</span>
+                                                            </div>
+                                                        </div>
+                                                        <div className="alert-badge-group">
+                                                            <span className={`severity-badge severity--${alert.severity.toLowerCase()}`}>
+                                                                {alert.severity}
+                                                            </span>
+                                                            <span className="alert-time-tag">{alert.date}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="alert-body-posh">
+                                                        <p className="alert-msg">{alert.message}</p>
+                                                        <div className="alert-context-crumbs">
+                                                            <span>Farmer ID: <strong>{alert.farmerId}</strong></span>
+                                                            <span className="crumb-sep" />
+                                                            <span>Confidence: <strong>High</strong></span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="alert-actions-posh">
+                                                        <div className="primary-actions">
+                                                            <button className="btn-posh-solid-danger" onClick={() => addNotification('Account freeze protocol initiated for security.', 'warning')}>
+                                                                <Lock size={14} />
+                                                                Freeze Account
+                                                            </button>
+                                                            <button className="btn-posh-subtle" onClick={() => addNotification('Full security forensic report generated.', 'success')}>
+                                                                <FileText size={14} />
+                                                                Full Report
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ));
+                                    })()}
+                                </div>
+                            )}
+
                             {localTab === 'Bank Compliance' && (
                                 <div className="detail-section">
                                     <h4 className="section-title">Institutional Health & Regulatory</h4>
@@ -1011,10 +1563,43 @@ function FarmerDetailModal({ farmer, onClose }) {
                                 </div>
 
                                 <div className="calc-actions">
-                                    <button className="btn-posh-success" onClick={() => { alert('Application Sanctioned successfully.'); onClose(); }}>Approve Loan</button>
-                                    <button className="btn-posh-danger" onClick={() => { alert('Application sent for manual rejection review.'); onClose(); }}>Decline</button>
+                                    <button
+                                        className="btn-posh-success"
+                                        onClick={handleApprove}
+                                        disabled={processing}
+                                    >
+                                        {processing ? 'Processing...' : 'Approve Loan'}
+                                    </button>
+                                    <button
+                                        className="btn-posh-danger"
+                                        onClick={handleReject}
+                                        disabled={processing}
+                                    >
+                                        Decline
+                                    </button>
                                 </div>
-                                <button className="btn-posh-outline" onClick={() => alert('Field visit scheduled for tomorrow 10:00 AM.')}>Request Field Audit</button>
+                                <button
+                                    className="btn-posh-outline"
+                                    onClick={() => {
+                                        setAuditRequested(true);
+                                        addNotification('Field visit scheduled for tomorrow 10:00 AM.', 'success');
+                                    }}
+                                >
+                                    Request Field Audit
+                                </button>
+                                {auditRequested && (
+                                    <div
+                                        className="status-badge"
+                                        style={{
+                                            marginTop: '0.75rem',
+                                            background: '#ecfdf5',
+                                            color: '#059669',
+                                            border: '1px solid rgba(5,150,105,0.25)'
+                                        }}
+                                    >
+                                        Field audit scheduled
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -1023,6 +1608,3 @@ function FarmerDetailModal({ farmer, onClose }) {
         </motion.div>
     );
 }
-
-
-

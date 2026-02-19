@@ -12,6 +12,8 @@ import Navbar from '../components/common/Navbar';
 import Footer from '../components/common/Footer';
 import StackingCards from '../components/common/StackingCards';
 import './LandingPage.css';
+import loginImage from '../assets/login.png';
+import bgVideo from '../assets/vid.mp4';
 
 const premiumEase = [0.16, 1, 0.3, 1];
 
@@ -118,28 +120,28 @@ const featuresExpanded = [
         icon: <Shield size={28} />,
         title: 'Agri-Trust Intelligence',
         description: 'Our proprietary AI engine analyzes over 50 behavioral and agricultural data points. By looking beyond traditional land collateral, we create a transparent "Agri-Trust Score" that accurately predicts repayment capacity based on historical productivity and community standing.',
-        image: 'https://images.unsplash.com/photo-1599933334297-516558e03c46?q=80&w=1000&auto=format&fit=crop',
+        image: 'https://i.pinimg.com/1200x/75/a6/fc/75a6fcc0f7f6af21733d4dc5d04e2939.jpg',
         color: '#2D3A2F', // Deep Evergreen
     },
     {
         icon: <CloudSun size={28} />,
         title: 'Satellite Verification',
         description: 'We integrate real-time NDVI and multispectral satellite imagery to verify crop health and plot boundaries with 98% accuracy. This "space-to-field" intelligence allows lenders to monitor their assets 24/7 without expensive field inspections.',
-        image: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=1000&auto=format&fit=crop',
+        image: 'https://i.pinimg.com/736x/03/48/45/0348458a62e1236d5496ae71d0e7dfe4.jpg',
         color: '#344C3D', // Forest Sage
     },
     {
         icon: <TrendingUp size={28} />,
         title: 'Climate-Adaptive Scoring',
         description: 'Traditional models punish farmers for bad weather. Our AI identifies resilience patterns by normalizing scores against hyper-local climate anomalies. We maintain credit stability for farmers even during regional drought or flood events.',
-        image: 'https://images.unsplash.com/photo-1596733430284-f7437f61a1a9?q=80&w=1000&auto=format&fit=crop',
+        image: 'https://i.pinimg.com/1200x/ef/75/3a/ef753a1a25c6ea799a40268c84500028.jpg',
         color: '#445D48', // Moss
     },
     {
         icon: <Lock size={28} />,
         title: 'Ethical Bias Shield',
         description: 'Built with fairness core-algorithms. We actively neutralize regional, gender, and land-tenure biases. Every decision is accompanied by human-readable "Reason Codes," ensuring every farmer knowsExactly how to improve their score.',
-        image: 'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?q=80&w=1000&auto=format&fit=crop',
+        image: 'https://i.pinimg.com/1200x/e1/8e/51/e18e51dbb0450df0768326f782bc125a.jpg',
         color: '#1E2B22', // Darkest Sage
     },
     {
@@ -153,7 +155,7 @@ const featuresExpanded = [
         icon: <WifiOff size={28} />,
         title: 'Offline-First Edge Sync',
         description: 'Digital divide shouldn\'t mean credit divide. Our platform works seamlessly in zero-connectivity zones. Field agents can sync data via encrypted mesh-SMS or local edge caching, bringing the power of AI to the most remote villages.',
-        image: 'https://images.unsplash.com/photo-1518527889108-638bc283296c?q=80&w=1000&auto=format&fit=crop',
+        image: loginImage,
         color: '#3A4A3C', // Deep Sage
     },
 ];
@@ -238,11 +240,6 @@ export default function LandingPage() {
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.8, ease: 'easeOut' }}
                         >
-                            <div className="hero__badge">
-                                <Sprout size={16} />
-                                <span>AI-Powered Agricultural Credit Scoring</span>
-                            </div>
-
                             <h1 className="hero__title">
                                 <TextReveal text="Empowering Rural India" /> <br />
                                 <span className="text-posh">
@@ -535,6 +532,16 @@ export default function LandingPage() {
                             viewport={{ once: true }}
                             transition={{ duration: 0.6 }}
                         >
+                            <video
+                                className="cta__video"
+                                src={bgVideo}
+                                autoPlay
+                                muted
+                                loop
+                                playsInline
+                                aria-label="Background video"
+                            />
+                            <div className="cta__overlay" />
                             <div className="cta__content">
                                 <h2>Ready to Transform Agricultural Credit?</h2>
                                 <p>Join thousands of farmers and lenders already using our platform for fair, data-driven lending.</p>

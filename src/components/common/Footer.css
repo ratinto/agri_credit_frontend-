@@ -1,8 +1,8 @@
 .footer {
-    background: var(--color-bg-dark);
-    color: var(--color-sage-hint);
+    background: #020204;
+    color: #f9fafb;
     position: relative;
-    padding: 6rem 6vw 4rem;
+    padding: 4rem 6vw 2.5rem;
     overflow: hidden;
 }
 
@@ -14,13 +14,13 @@
     content: "AgriCredit";
     position: absolute;
     bottom: -0.05em;
-    left: 2vw;
-    font-size: clamp(6rem, 24vw, 15rem);
+    left: 6vw;
+    font-size: clamp(6rem, 22vw, 12rem);
     font-weight: 400;
-    font-family: var(--font-serif);
+    font-family: 'Cormorant Garamond', Georgia, serif;
     font-style: italic;
-    letter-spacing: -0.02em;
-    color: rgba(255, 255, 255, 0.03);
+    letter-spacing: 0.02em;
+    color: rgba(255, 255, 255, 0.18);
     pointer-events: none;
     white-space: nowrap;
     line-height: 0.9;
@@ -47,15 +47,14 @@
 .footer__eyebrow {
     display: inline-flex;
     align-items: center;
-    padding: 0.4rem 1rem;
-    border-radius: var(--radius-pill);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    font-size: 0.65rem;
-    letter-spacing: 0.2em;
+    padding: 0.35rem 0.9rem;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    font-size: 0.7rem;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
-    opacity: 0.8;
-    margin-bottom: 2rem;
-    font-family: var(--font-secondary);
+    opacity: 0.75;
+    margin-bottom: 1.5rem;
 }
 
 .footer__headline {
@@ -107,7 +106,7 @@
 
 .footer__link:hover {
     opacity: 1;
-    color: white;
+    color: var(--color-accent-light);
     transform: translateX(4px);
 }
 

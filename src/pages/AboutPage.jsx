@@ -8,7 +8,7 @@ export default function AboutPage() {
     return (
         <div className="static-page">
             <Navbar />
-            <div className="static-page__container">
+            <div className="static-page__container bg-dot-grid">
                 <motion.div
                     className="static-page__header"
                     initial={{ opacity: 0, y: 20 }}
@@ -36,16 +36,16 @@ export default function AboutPage() {
                     </p>
                 </motion.section>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '2rem' }}>
-                    <motion.div className="static-content" whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
-                        <div style={{ color: 'var(--color-evergreen)', marginBottom: '1rem' }}><Target size={32} /></div>
-                        <h3>Our Vision</h3>
+                <div className="about-grid">
+                    <motion.div className="feature-card" whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
+                        <div className="feature-card__icon"><Target size={28} /></div>
+                        <h3 className="feature-card__title">Our Vision</h3>
                         <p>To become the digital backbone of rural lending in India, ensuring every honest farmer has the capital they need to grow their future.</p>
                     </motion.div>
-                    <motion.div className="static-content" whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
-                        <div style={{ color: 'var(--color-evergreen)', marginBottom: '1rem' }}><Heart size={32} /></div>
-                        <h3>Our Values</h3>
-                        <p>Radical transparency, data privacy, and ethical AI. We never use a "black-box" model; if we say no, we explain why and how to get to a yes.</p>
+                    <motion.div className="feature-card" whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
+                        <div className="feature-card__icon"><Heart size={28} /></div>
+                        <h3 className="feature-card__title">Our Values</h3>
+                        <p>Radical transparency, data privacy, and ethical AI. We never use a black‑box model; if we say no, we explain why and how to get to a yes.</p>
                     </motion.div>
                 </div>
 
