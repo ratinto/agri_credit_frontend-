@@ -21,7 +21,7 @@ export default function ScoreImprovement() {
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
                 >
-                    <h1>Improve Your <span className="text-gradient">Trust Score</span></h1>
+                    <h1>Improve Your <span className="text-posh">Trust Score</span></h1>
                     <p>Personalized recommendations to boost your credit score</p>
                 </motion.div>
 
@@ -41,8 +41,8 @@ export default function ScoreImprovement() {
                                     strokeLinecap="round" transform="rotate(-90 50 50)" />
                                 <defs>
                                     <linearGradient id="improveGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                        <stop offset="0%" stopColor="#2D6A4F" />
-                                        <stop offset="100%" stopColor="#D4A017" />
+                                        <stop offset="0%" stopColor="var(--color-evergreen)" />
+                                        <stop offset="100%" stopColor="var(--color-moss)" />
                                     </linearGradient>
                                 </defs>
                             </svg>
@@ -96,7 +96,7 @@ export default function ScoreImprovement() {
                                             className="score-component__fill"
                                             style={{
                                                 width: `${c.score}%`,
-                                                background: c.score >= 75 ? '#38A169' : c.score >= 60 ? '#D69E2E' : '#E53E3E'
+                                                background: c.score >= 75 ? 'var(--color-evergreen)' : c.score >= 60 ? 'var(--color-moss)' : 'var(--color-danger)'
                                             }}
                                         />
                                     </div>

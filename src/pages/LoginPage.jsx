@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Eye, EyeOff } from 'lucide-react';
-import logo from '../assets/logo.png';
+import logo from '../assets/a.jpeg';
 import './LoginPage.css';
 import { bankLogin } from '../services/authService';
 import { useAuth } from '../context/AuthContext';
@@ -55,11 +55,11 @@ export default function LoginPage() {
 
         try {
             console.log('Starting login with Bank ID:', bankId);
-            
+
             // Bank/Lender login with real API
             const response = await bankLogin(bankId, password);
             console.log('Login response:', response);
-            
+
             if (!response || !response.token) {
                 throw new Error('Invalid response from server');
             }
@@ -72,10 +72,10 @@ export default function LoginPage() {
             });
 
             console.log('Auth context updated, setting success flag...');
-            
+
             // Set success flag to trigger navigation via useEffect
             setLoginSuccess(true);
-            
+
         } catch (err) {
             console.error('Login error:', err);
             setError(err.message || 'Invalid credentials. Please try again.');
@@ -154,25 +154,25 @@ export default function LoginPage() {
                         <motion.div
                             className="login-card__header"
                             variants={fadeInUp}
-                            style={{ 
-                                textAlign: 'center', 
+                            style={{
+                                textAlign: 'center',
                                 marginBottom: '2rem',
                                 paddingTop: '1rem'
                             }}
                         >
-                            <h2 style={{ 
-                                fontSize: '1.5rem', 
-                                fontWeight: '600',
-                                background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
-                                WebkitBackgroundClip: 'text',
-                                WebkitTextFillColor: 'transparent',
+                            <h2 style={{
+                                fontSize: '1.8rem',
+                                fontWeight: '500',
+                                fontFamily: 'var(--font-serif)',
+                                color: 'var(--color-evergreen)',
                                 marginBottom: '0.5rem'
                             }}>
                                 Bank / Lender Login
                             </h2>
-                            <p style={{ 
-                                fontSize: '0.9rem', 
-                                opacity: 0.7 
+                            <p style={{
+                                fontSize: '0.9rem',
+                                color: 'var(--color-moss)',
+                                opacity: 0.8
                             }}>
                                 Enterprise access for financial institutions
                             </p>
@@ -232,14 +232,15 @@ export default function LoginPage() {
                         <motion.div
                             className="login-card__glass-footer"
                             variants={fadeInUp}
-                            style={{ 
-                                display: 'flex', 
-                                flexDirection: 'column', 
-                                gap: '0.5rem', 
-                                alignItems: 'center' 
+                            style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '0.5rem',
+                                alignItems: 'center',
+                                color: 'var(--color-moss)'
                             }}
                         >
-                            <span>Don't have an account? <Link to="/signup" style={{ color: '#3b82f6', textDecoration: 'none', fontWeight: 500 }}>Sign up here</Link></span>
+                            <span>Don't have an account? <Link to="/signup" style={{ color: 'var(--color-evergreen)', textDecoration: 'none', fontWeight: 600 }}>Sign up here</Link></span>
                             <span style={{ fontSize: '0.85rem', opacity: 0.7 }}>Enterprise access only. All sessions recorded.</span>
                         </motion.div>
                     </motion.div>

@@ -10,13 +10,14 @@ import {
 import DashboardLayout from '../components/common/DashboardLayout';
 import {
     riskDistribution, fraudAlerts,
-    mlInsights, navLinks
+    mlInsights, navLinks, farmersList,
+    regionalRisk, portfolioMonthlyTrends, cropDistribution
 } from '../data/mockData';
-import { 
-    getPendingLoanApplications, 
+import {
+    getPendingLoanApplications,
     getFarmerProfile,
     approveLoan,
-    rejectLoan 
+    rejectLoan
 } from '../services/bankService';
 import { useAuth } from '../context/AuthContext';
 import './LenderDashboard.css';
@@ -31,13 +32,13 @@ export default function LenderDashboard() {
     const location = useLocation();
     const navigate = useNavigate();
     const { user, isAuthenticated } = useAuth();
-    
+
     const [activeTab, setActiveTab] = useState('Dashboard');
     const [searchTerm, setSearchTerm] = useState('');
     const [riskFilter, setRiskFilter] = useState('All');
     const [showDetail, setShowDetail] = useState(false);
     const [selectedFarmer, setSelectedFarmer] = useState(null);
-    
+
     // Real data from API
     const [pendingLoans, setPendingLoans] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -62,16 +63,16 @@ export default function LenderDashboard() {
             try {
                 setLoading(true);
                 const response = await getPendingLoanApplications();
-                
+
                 if (response.success) {
                     setPendingLoans(response.data || []);
-                    
+
                     // Calculate stats from loans
                     const loans = response.data || [];
-                    const avgScore = loans.length > 0 
-                        ? loans.reduce((sum, l) => sum + (l.trust_score || 0), 0) / loans.length 
+                    const avgScore = loans.length > 0
+                        ? loans.reduce((sum, l) => sum + (l.trust_score || 0), 0) / loans.length
                         : 0;
-                    
+
                     setStats({
                         totalApplications: loans.length,
                         avgScore: Math.round(avgScore),
@@ -104,29 +105,37 @@ export default function LenderDashboard() {
     }, [location]);
 
     // Filter logic for loans (updated to use real data structure)
-    const filteredLoans = pendingLoans.filter(loan => {
+    const filteredLoans = farmersList.filter(farmer => {
         const searchLower = searchTerm.toLowerCase();
         const matchSearch =
-            (loan.farmer_name || '').toLowerCase().includes(searchLower) ||
-            (loan.loan_id || '').toLowerCase().includes(searchLower) ||
-            (loan.farmer_district || '').toLowerCase().includes(searchLower);
-        
-        const riskLevel = loan.risk_level || 'Medium';
-        const matchRisk = riskFilter === 'All' || riskLevel === riskFilter;
-        
+            farmer.name.toLowerCase().includes(searchLower) ||
+            farmer.id.toLowerCase().includes(searchLower) ||
+            farmer.district.toLowerCase().includes(searchLower);
+
+        const matchRisk = riskFilter === 'All' || farmer.risk === riskFilter;
+
         return matchSearch && matchRisk;
     });
 
-    const handleViewFarmer = async (loan) => {
+    const handleViewFarmer = async (farmerObj) => {
+        // Try to get full profile from API if possible, otherwise use local data
+        const farmerId = farmerObj.farmer_id || farmerObj.id;
+
         try {
-            const response = await getFarmerProfile(loan.farmer_id);
+            const response = await getFarmerProfile(farmerId);
             if (response.success) {
                 setSelectedFarmer(response.data);
                 setShowDetail(true);
+            } else {
+                // Fallback to local data if response isn't success
+                setSelectedFarmer(farmerObj);
+                setShowDetail(true);
             }
         } catch (err) {
-            console.error('Error fetching farmer:', err);
-            alert('Failed to load farmer details');
+            console.warn('API fetch failed, falling back to local data:', err);
+            // Fallback: Use the data we already have from the list
+            setSelectedFarmer(farmerObj);
+            setShowDetail(true);
         }
     };
 
@@ -154,7 +163,7 @@ export default function LenderDashboard() {
                     transition={{ duration: 0.5 }}
                 >
                     <div>
-                        <h1>Lender <span className="text-gradient">Admin Panel</span></h1>
+                        <h1>Lender <span className="text-posh">Portal</span></h1>
                         <p className="lender-dash__subtitle">{bankName} · Officer: {contactPerson}</p>
                     </div>
                     <div className="lender-dash__header-actions">
@@ -169,18 +178,6 @@ export default function LenderDashboard() {
                     </div>
                 </motion.div>
 
-                {/* Tab Navigation */}
-                <div className="lender-dash__tabs">
-                    {navLinks.lender.map(link => (
-                        <Link
-                            key={link.path}
-                            to={link.path}
-                            className={`lender-tab ${activeTab === link.name ? 'lender-tab--active' : ''}`}
-                        >
-                            {link.name}
-                        </Link>
-                    ))}
-                </div>
 
                 <div className="lender-dash__content">
                     {activeTab === 'Dashboard' && <OverviewSection stats={stats} pendingLoans={pendingLoans} setActiveTab={setActiveTab} />}
@@ -197,7 +194,7 @@ export default function LenderDashboard() {
                     {activeTab === 'Loan Decisions' && <DecisionsSection pendingLoans={pendingLoans} />}
                     {activeTab === 'Portfolio Analytics' && <AnalyticsSection />}
                     {activeTab === 'Fraud & Alerts' && <AlertsSection />}
-                    {activeTab === 'Settings & Admin' && <SettingsSection />}
+                    {activeTab === 'Settings' && <SettingsSection />}
                 </div>
 
                 {showDetail && selectedFarmer && (
@@ -239,55 +236,61 @@ function OverviewSection({ stats, pendingLoans, setActiveTab }) {
                 ))}
             </div>
 
-            <div className="lender-dash__grid">
-                <div className="dash-card">
-                    <div className="dash-card__header">
-                        <h3>Risk Distribution</h3>
-                        <Link to="/lender/analytics" className="dash-card__link">
-                            Deep Analysis <ChevronRight size={14} />
-                        </Link>
-                    </div>
-                    <div className="risk-dist">
-                        <div className="risk-dist__bar">
-                            {riskDistribution.map((r, i) => (
-                                <div key={i} className="risk-dist__segment" style={{ width: `${r.percentage}%`, background: r.color }} />
-                            ))}
+            <div className="dash-card">
+                <div className="dash-card__header">
+                    <h3>Agri-Trust Distribution</h3>
+                    <Link to="/lender/analytics" className="dash-card__link">
+                        Full Report <ChevronRight size={14} />
+                    </Link>
+                </div>
+                <div className="risk-dist-enhanced">
+                    {riskDistribution.map((r, i) => (
+                        <div key={i} className="risk-dist-row">
+                            <div className="risk-dist-info">
+                                <span className="risk-label">{r.level}</span>
+                                <span className="risk-count">{r.count} Farmers</span>
+                            </div>
+                            <div className="risk-bar-container">
+                                <motion.div
+                                    className="risk-bar-fill"
+                                    initial={{ width: 0 }}
+                                    animate={{ width: `${r.percentage}%` }}
+                                    style={{ backgroundColor: r.color }}
+                                />
+                                <span className="risk-pct">{r.percentage}%</span>
+                            </div>
                         </div>
-                        <div className="risk-dist__legend-grid">
-                            {riskDistribution.map((r, i) => (
-                                <div key={i} className="risk-dist__item">
-                                    <span className="risk-dist__dot" style={{ background: r.color }} />
-                                    <span className="risk-dist__name">{r.level}</span>
-                                    <span className="risk-dist__pct">{r.percentage}%</span>
-                                </div>
-                            ))}
-                        </div>
+                    ))}
+                    <div className="risk-dist-footer">
+                        <p className="text-muted text-xs">Based on 12.8k verified profiles</p>
                     </div>
                 </div>
+            </div>
 
-                <div className="dash-card">
-                    <div className="dash-card__header">
-                        <h3>Recent Activity</h3>
-                        <Link to="/lender/farmers" className="dash-card__link">
-                            View All <ChevronRight size={14} />
-                        </Link>
-                    </div>
-                    <div className="activity-feed">
-                        {[
-                            { user: 'S. Devi', action: 'KYC Verified', time: '12m ago', icon: <CheckCircle2 size={14} /> },
-                            { user: 'R. Kumar', action: 'Score Updated: 74', time: '45m ago', icon: <TrendingUp size={14} /> },
-                            { user: 'P. Sharma', action: 'Loan Requested', time: '2h ago', icon: <DollarSign size={14} /> },
-                            { user: 'A. Patel', action: 'Flagged: Fraud', time: '4h ago', icon: <AlertTriangle size={14} />, color: '#E53E3E' },
-                        ].map((act, i) => (
-                            <div key={i} className="activity-item">
-                                <div className="activity-item__icon" style={{ color: act.color || '#2D6A4F' }}>{act.icon}</div>
-                                <div className="activity-item__text">
-                                    <strong>{act.user}</strong> {act.action}
-                                    <span>{act.time}</span>
+            <div className="dash-card">
+                <div className="dash-card__header">
+                    <h3>Top Credit Candidates</h3>
+                    <Link to="/lender/farmers" className="dash-card__link">
+                        Approve All <ChevronRight size={14} />
+                    </Link>
+                </div>
+                <div className="candidates-list">
+                    {farmersList.filter(f => f.score >= 80).slice(0, 4).map((f, i) => (
+                        <div key={i} className="candidate-item">
+                            <div className="candidate-identity">
+                                <span className="candidate-avatar">{f.name.charAt(0)}</span>
+                                <div>
+                                    <span className="candidate-name">{f.name}</span>
+                                    <span className="candidate-meta">{f.district}, {f.landSize}</span>
                                 </div>
                             </div>
-                        ))}
-                    </div>
+                            <div className="candidate-score">
+                                <span className="score-val">{f.score}</span>
+                                <span className="score-label">Trust Score</span>
+                            </div>
+                            <button className="btn-mini btn-mini--success">Pre-Approve</button>
+                        </div>
+                    ))}
                 </div>
             </div>
         </motion.div>
@@ -340,32 +343,32 @@ function FarmersSection({ filteredLoans, searchTerm, setSearchTerm, riskFilter, 
                 </div>
                 {filteredLoans.length === 0 ? (
                     <div style={{ padding: '2rem', textAlign: 'center', gridColumn: '1 / -1' }}>
-                        <p>No loan applications found</p>
+                        <p>No farmers found</p>
                     </div>
                 ) : (
-                    filteredLoans.map((loan, i) => (
+                    filteredLoans.map((farmer, i) => (
                         <div key={i} className="farmer-table__row">
-                            <span className="farmer-table__id">{loan.loan_id}</span>
-                            <span className="farmer-table__name">{loan.farmer_name}</span>
+                            <span className="farmer-table__id">{farmer.id}</span>
+                            <span className="farmer-table__name">{farmer.name}</span>
                             <span>
-                                <span className={`score-badge score-badge--${loan.trust_score >= 70 ? 'high' : loan.trust_score >= 50 ? 'med' : 'low'}`}>
-                                    {loan.trust_score || 'N/A'}
+                                <span className={`score-badge score-badge--${farmer.score >= 70 ? 'high' : farmer.score >= 50 ? 'med' : 'low'}`}>
+                                    {farmer.score}
                                 </span>
                             </span>
                             <span>
-                                <span className={`risk-badge risk-badge--${(loan.risk_level || 'medium').toLowerCase()}`}>
-                                    {loan.risk_level || 'Medium'}
+                                <span className={`risk-badge risk-badge--${farmer.risk.toLowerCase()}`}>
+                                    {farmer.risk}
                                 </span>
                             </span>
-                            <span style={{ fontWeight: 600 }}>₹{parseFloat(loan.loan_amount || 0).toLocaleString()}</span>
-                            <span>{loan.farmer_district || 'N/A'}</span>
+                            <span style={{ fontWeight: 600 }}>₹{farmer.loanAmount.toLocaleString()}</span>
+                            <span>{farmer.district}</span>
                             <span>
-                                <span className="status-badge" style={{ color: '#D69E2E' }}>
-                                    {loan.loan_status || 'pending'}
+                                <span className={`status-badge status-badge--${farmer.status.toLowerCase()}`}>
+                                    {farmer.status}
                                 </span>
                             </span>
                             <span>
-                                <button className="btn-text" style={{ padding: '0.4rem' }} onClick={() => onViewDetail(loan)}>
+                                <button className="btn-text" style={{ padding: '0.4rem' }} onClick={() => onViewDetail(farmer)}>
                                     <Eye size={16} />
                                 </button>
                             </span>
@@ -388,14 +391,14 @@ function DecisionsSection({ pendingLoans }) {
             const approvedAmount = parseFloat(loan.loan_amount) * 0.9;
             const interestRate = 8; // Default 8%
             const tenureMonths = 12; // Default 12 months
-            
+
             await approveLoan({
                 loan_id: loan.loan_id,
                 approved_amount: approvedAmount,
                 interest_rate: interestRate,
                 tenure_months: tenureMonths
             });
-            
+
             setDecisions(prev => ({ ...prev, [loan.loan_id]: 'Approved' }));
             alert(`Loan ${loan.loan_id} approved for ₹${approvedAmount.toLocaleString()}`);
         } catch (err) {
@@ -409,14 +412,14 @@ function DecisionsSection({ pendingLoans }) {
     const handleReject = async (loan) => {
         const reason = prompt('Enter rejection reason:');
         if (!reason) return;
-        
+
         setProcessing(loan.loan_id);
         try {
             await rejectLoan({
                 loan_id: loan.loan_id,
                 rejection_reason: reason
             });
-            
+
             setDecisions(prev => ({ ...prev, [loan.loan_id]: 'Rejected' }));
             alert(`Loan ${loan.loan_id} rejected`);
         } catch (err) {
@@ -478,15 +481,15 @@ function DecisionsSection({ pendingLoans }) {
                             <span>
                                 {!decisions[loan.loan_id] && loan.loan_status === 'pending' ? (
                                     <div className="decision-btns-inline">
-                                        <button 
-                                            className="btn-mini btn-mini--success" 
+                                        <button
+                                            className="btn-mini btn-mini--success"
                                             onClick={() => handleApprove(loan)}
                                             disabled={processing === loan.loan_id}
                                         >
                                             {processing === loan.loan_id ? 'Processing...' : 'Approve'}
                                         </button>
-                                        <button 
-                                            className="btn-mini btn-mini--danger" 
+                                        <button
+                                            className="btn-mini btn-mini--danger"
                                             onClick={() => handleReject(loan)}
                                             disabled={processing === loan.loan_id}
                                         >
@@ -513,70 +516,131 @@ function AnalyticsSection() {
             <div className="analytics-grid">
                 <div className="dash-card">
                     <div className="dash-card__header">
-                        <h3>Portfolio Growth</h3>
-                        <div className="lender-stat__trend text-success">+18.5% YoY</div>
+                        <h3>Portfolio Disbursement Trend</h3>
+                        <div className="lender-stat__trend text-success">+₹2.4 Cr last month</div>
                     </div>
                     <div className="analytics-placeholder">
-                        {/* Simulate a bar chart */}
-                        <div className="mini-chart">
-                            {[65, 45, 75, 55, 85, 95, 80].map((h, i) => (
-                                <motion.div
-                                    key={i}
-                                    className="mini-chart__bar"
-                                    initial={{ height: 0 }}
-                                    animate={{ height: `${h}%` }}
-                                    transition={{ delay: i * 0.1 }}
-                                />
-                            ))}
+                        <div className="complex-chart">
+                            <div className="chart-y-axis">
+                                <span>35L</span><span>25L</span><span>15L</span><span>5L</span>
+                            </div>
+                            <div className="mini-chart">
+                                {portfolioMonthlyTrends.map((data, i) => (
+                                    <div key={i} className="chart-group">
+                                        <motion.div
+                                            className="mini-chart__bar bar-primary"
+                                            initial={{ height: 0 }}
+                                            animate={{ height: `${(data.disbursed / 35) * 100}%` }}
+                                            transition={{ delay: i * 0.1 }}
+                                            title={`Disbursed: ${data.disbursed}L`}
+                                        />
+                                        <motion.div
+                                            className="mini-chart__bar bar-secondary"
+                                            initial={{ height: 0 }}
+                                            animate={{ height: `${(data.collection / 35) * 100}%` }}
+                                            transition={{ delay: i * 0.1 + 0.1 }}
+                                            title={`Collection: ${data.collection}L`}
+                                        />
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                         <div className="mini-chart__labels">
-                            <span>Jul</span><span>Aug</span><span>Sep</span><span>Oct</span><span>Nov</span><span>Dec</span><span>Jan</span>
+                            {portfolioMonthlyTrends.map((d, i) => <span key={i}>{d.month}</span>)}
+                        </div>
+                        <div className="chart-legend">
+                            <div className="legend-item"><span className="dot bar-primary" /> Disbursement</div>
+                            <div className="legend-item"><span className="dot bar-secondary" /> Collection</div>
                         </div>
                     </div>
                 </div>
 
                 <div className="dash-card">
                     <div className="dash-card__header">
-                        <h3>NPA Risk Index</h3>
-                        <div className="lender-stat__trend text-danger">-2.1% improvement</div>
+                        <h3>Credit Health by Region</h3>
+                        <div className="lender-stat__trend text-success">Varanasi leads</div>
                     </div>
                     <div className="analytics-placeholder">
-                        <div className="risk-meter">
-                            <div className="risk-meter__arc" />
-                            <motion.div
-                                className="risk-meter__needle"
-                                initial={{ rotate: -90 }}
-                                animate={{ rotate: 15 }}
-                                transition={{ duration: 1.5, type: 'spring' }}
-                            />
-                            <div className="risk-meter__value">3.2%</div>
-                            <div className="risk-meter__label">Regional Avg: 4.8%</div>
+                        <div className="regional-grid">
+                            {regionalRisk.map((r, i) => (
+                                <div key={i} className="regional-card">
+                                    <div className="regional-card__top">
+                                        <span className="region-name">{r.region}</span>
+                                        <span className={`risk-tag risk-tag--${r.risk.toLowerCase()}`}>{r.risk}</span>
+                                    </div>
+                                    <div className="region-score">
+                                        <div className="score-label">Avg. Trust Score</div>
+                                        <div className="score-value">{r.score}</div>
+                                    </div>
+                                    <div className="region-trend">
+                                        {r.trend === 'up' ? <ArrowUpRight size={14} className="text-success" /> : r.trend === 'down' ? <ArrowDownRight size={14} className="text-danger" /> : <Activity size={14} className="text-muted" />}
+                                        <span className={r.trend === 'up' ? 'text-success' : r.trend === 'down' ? 'text-danger' : ''}>
+                                            {r.trend === 'up' ? 'Improving' : r.trend === 'down' ? 'Declining' : 'Stable'}
+                                        </span>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div className="dash-card" style={{ marginTop: '2rem' }}>
-                <h3>District-wise Performance</h3>
-                <div className="district-stats">
-                    {[
-                        { name: 'Varanasi', farmers: 1240, disbursed: '₹4.2 Cr', health: 82 },
-                        { name: 'Allahabad', farmers: 850, disbursed: '₹2.8 Cr', health: 74 },
-                        { name: 'Agra', farmers: 2100, disbursed: '₹7.1 Cr', health: 88 },
-                        { name: 'Lucknow', farmers: 1540, disbursed: '₹5.5 Cr', health: 68 },
-                    ].map((d, i) => (
-                        <div key={i} className="district-row">
-                            <span className="district-name">{d.name}</span>
-                            <span className="district-count">{d.farmers} Farmers</span>
-                            <span className="district-amt">{d.disbursed}</span>
-                            <div className="district-health">
-                                <div className="district-health__bar">
-                                    <div className="district-health__fill" style={{ width: `${d.health}%`, backgroundColor: d.health > 80 ? '#2D6A4F' : d.health > 70 ? '#D69E2E' : '#E53E3E' }} />
+            <div className="analytics-row" style={{ marginTop: '2rem' }}>
+                <div className="dash-card">
+                    <h3>Crop Portfolio Concentration</h3>
+                    <p className="text-muted">Analysis of loan exposure across different crop cycles.</p>
+                    <div className="crop-dist-grid">
+                        {cropDistribution.map((c, i) => (
+                            <div key={i} className="crop-dist-item">
+                                <div className="crop-dist-info">
+                                    <span className="crop-name">{c.crop}</span>
+                                    <span className="crop-share">{c.share}% Exposure</span>
                                 </div>
-                                <span>{d.health}%</span>
+                                <div className="crop-progress-container">
+                                    <div className="crop-progress-bar">
+                                        <motion.div
+                                            className="crop-progress-fill"
+                                            initial={{ width: 0 }}
+                                            animate={{ width: `${c.share}%` }}
+                                            style={{ backgroundColor: `hsl(150, 40%, ${40 + i * 10}%)` }}
+                                        />
+                                    </div>
+                                    <div className="crop-meta">
+                                        <span>Yield Index: <strong>{c.avgYield.toFixed(1)}x</strong></span>
+                                        <span>Risk Index: <strong>{c.riskIndex}</strong></span>
+                                    </div>
+                                </div>
                             </div>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="dash-card fraud-summary">
+                    <h3>Security & Compliance</h3>
+                    <div className="fraud-stats">
+                        <div className="fraud-stat-item">
+                            <span className="f-val">0.8%</span>
+                            <span className="f-lab">Fraud Rate</span>
                         </div>
-                    ))}
+                        <div className="fraud-stat-item">
+                            <span className="f-val">94.2%</span>
+                            <span className="f-lab">Verification Accuracy</span>
+                        </div>
+                    </div>
+                    <div className="fraud-indicators">
+                        <div className="indicator">
+                            <span>Satellite Tampering Checks</span>
+                            <span className="text-success">Passed</span>
+                        </div>
+                        <div className="indicator">
+                            <span>Bhuinaksha Data Sync</span>
+                            <span className="text-success">Active</span>
+                        </div>
+                        <div className="indicator">
+                            <span>Aadhaaar Vault Status</span>
+                            <span className="text-success">Secure</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </motion.div>

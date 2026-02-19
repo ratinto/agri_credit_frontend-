@@ -3,66 +3,53 @@
 
 /* ===== CSS VARIABLES ===== */
 :root {
-  /* Primary Colors - Brand Screenshot Theme */
-  --color-moss: #2C3424;
-  --color-cypress: #4C583E;
-  --color-olive: #768064;
-  --color-cedar: #959581;
-  --color-aloe: #DADED8;
+  /* Monochromatic Sage Green Color Palette */
+  --color-sage-hint: #E2E9E1;
+  --color-mint: #BFCFBB;
+  --color-sage: #8EA58C;
+  --color-moss: #738A6E;
+  --color-evergreen: #344C3D;
 
-  --color-primary: var(--color-moss);
-  --color-primary-light: var(--color-cypress);
-  --color-primary-dark: #1a1f15;
+  /* Primary Mappings */
+  --color-primary: var(--color-evergreen);
+  --color-primary-light: var(--color-moss);
+  --color-primary-dark: #233329;
 
   /* Neutral Colors */
-  --color-bg: #f5f5f3;
-  /* Slight warm off-white */
-  --color-bg-dark: var(--color-moss);
-  --color-bg-card: #ffffff;
-  --color-surface: var(--color-aloe);
+  --color-bg: #F9FAF9;
+  /* Ultra light sage hint for bg */
+  --color-bg-dark: var(--color-evergreen);
+  --color-bg-card: #FFFFFF;
+  --color-surface: var(--color-sage-hint);
 
   /* Text Colors */
-  --color-text: var(--color-moss);
-  --color-text-secondary: var(--color-cypress);
-  --color-text-muted: var(--color-olive);
-  --color-text-light: var(--color-aloe);
+  --color-text: #1C231F;
+  /* Very dark green/black */
+  --color-text-secondary: var(--color-evergreen);
+  --color-text-muted: var(--color-moss);
+  --color-text-light: var(--color-sage-hint);
 
-  /* Typography */
-  --font-primary: 'Outfit', sans-serif;
+  /* Typography - Serif for posh look */
+  --font-primary: 'Cormorant Garamond', serif;
   --font-secondary: 'Inter', sans-serif;
   --font-serif: 'Cormorant Garamond', serif;
 
-  /* Neutral Colors */
-  --color-bg: #FAFDF7;
-  --color-bg-dark: #0F1A12;
-  --color-bg-card: #FFFFFF;
-  --color-bg-card-dark: #1A2E1E;
-  --color-surface: #F0F7F1;
-  --color-surface-dark: #152219;
-
-  /* Text Colors */
-  --color-text: #1A1A2E;
-  --color-text-secondary: #4A5568;
-  --color-text-muted: #718096;
-  --color-text-light: #F7FAFC;
-  --color-text-accent: #2D6A4F;
-
-  /* Status Colors */
-  --color-success: #38A169;
-  --color-warning: #D69E2E;
-  --color-danger: #E53E3E;
-  --color-info: #3182CE;
+  /* Status Colors (Subdued for premium feel) */
+  --color-success: #52796F;
+  --color-warning: #9B8E7E;
+  --color-danger: #8B5E5E;
+  --color-info: #5E7B8B;
 
   /* Risk Level Colors */
-  --color-risk-low: #38A169;
-  --color-risk-medium: #D69E2E;
-  --color-risk-high: #E53E3E;
+  --color-risk-low: var(--color-success);
+  --color-risk-medium: var(--color-warning);
+  --color-risk-high: var(--color-danger);
 
   /* Score Colors */
-  --color-score-excellent: #2D6A4F;
-  --color-score-good: #40916C;
-  --color-score-moderate: #D69E2E;
-  --color-score-poor: #E53E3E;
+  --color-score-excellent: var(--color-evergreen);
+  --color-score-good: var(--color-moss);
+  --color-score-moderate: var(--color-sage);
+  --color-score-poor: var(--color-danger);
 
   /* Spacing */
   --space-xs: 0.25rem;
@@ -74,38 +61,29 @@
   --space-3xl: 4rem;
   --space-4xl: 6rem;
 
-  /* Border Radius */
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 16px;
-  --radius-xl: 24px;
+  /* Border Radius - Refined smaller radii */
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
   --radius-full: 50%;
   --radius-pill: 999px;
 
-  /* Shadows */
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.12);
-  --shadow-xl: 0 20px 60px rgba(0, 0, 0, 0.15);
-  --shadow-glow: 0 0 30px rgba(45, 106, 79, 0.2);
-  --shadow-gold: 0 0 30px rgba(212, 160, 23, 0.2);
-
-  /* Typography */
-  --font-primary: 'Outfit', sans-serif;
-  --font-secondary: 'Inter', sans-serif;
+  /* Shadows - Very subtle for posh feel */
+  --shadow-sm: 0 2px 4px rgba(52, 76, 61, 0.05);
+  --shadow-md: 0 4px 20px rgba(52, 76, 61, 0.08);
+  --shadow-lg: 0 10px 40px rgba(52, 76, 61, 0.1);
+  --shadow-xl: 0 20px 80px rgba(52, 76, 61, 0.12);
 
   /* Transitions */
-  --transition-fast: 0.15s ease;
-  --transition-normal: 0.3s ease;
-  --transition-slow: 0.5s ease;
-  --transition-bounce: 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --transition-fast: 0.2s cubic-bezier(0.23, 1, 0.32, 1);
+  --transition-normal: 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+  --transition-slow: 0.8s cubic-bezier(0.23, 1, 0.32, 1);
 
   /* Z-index */
   --z-dropdown: 100;
   --z-sticky: 200;
   --z-modal: 300;
-  --z-toast: 400;
-  --z-tooltip: 500;
 }
 
 /* ===== RESET & BASE ===== */
@@ -139,9 +117,11 @@ h4,
 h5,
 h6 {
   font-family: var(--font-primary);
-  font-weight: 700;
-  line-height: 1.2;
-  letter-spacing: -0.02em;
+  font-weight: 500;
+  /* Medium weight for posh serif look */
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  color: var(--color-text);
 }
 
 a {
@@ -190,10 +170,13 @@ textarea {
 }
 
 .text-gradient {
-  background: linear-gradient(135deg, var(--color-moss), var(--color-olive));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--color-evergreen);
+}
+
+.text-posh {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
 }
 
 .glass {
@@ -220,12 +203,12 @@ textarea {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-primary-200);
+  background: var(--color-sage);
   border-radius: var(--radius-pill);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-primary);
+  background: var(--color-moss);
 }
 
 /* ===== ANIMATIONS ===== */

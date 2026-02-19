@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Eye, EyeOff, CheckCircle } from 'lucide-react';
-import logo from '../assets/logo.png';
+import logo from '../assets/a.jpeg';
 import './LoginPage.css';
 import { bankRegister } from '../services/authService';
 

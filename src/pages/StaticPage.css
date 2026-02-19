@@ -16,10 +16,11 @@
 }
 
 .static-page__title {
-    font-size: 3rem;
-    font-weight: 800;
-    color: var(--color-primary-dark);
-    margin-bottom: 1rem;
+    font-family: var(--font-serif);
+    font-size: 3.5rem;
+    font-weight: 500;
+    color: var(--color-evergreen);
+    margin-bottom: 1.5rem;
 }
 
 .static-page__subtitle {
@@ -32,8 +33,9 @@
 .static-content {
     background: white;
     padding: 3rem;
-    border-radius: var(--radius-xl);
-    box-shadow: var(--shadow-lg);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-sage-hint);
+    box-shadow: var(--shadow-sm);
     line-height: 1.6;
 }
 

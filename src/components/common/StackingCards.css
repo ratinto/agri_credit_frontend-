@@ -1,0 +1,121 @@
+.stacking-cards-wrapper {
+    position: relative;
+    /* Height dynamic in JSX */
+}
+
+.card-sticky-container {
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: sticky;
+    top: 0;
+}
+
+.card-main {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    top: -10%;
+    /* adjusted from -25% for better visibility */
+    height: 500px;
+    width: 80%;
+    max-width: 1100px;
+    border-radius: var(--radius-xl);
+    padding: 3rem 4rem;
+    transform-origin: top;
+    box-shadow: 0 50px 100px rgba(0, 0, 0, 0.3);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+.card-title-center {
+    font-family: var(--font-serif);
+    font-size: 2.5rem;
+    font-weight: 500;
+    text-align: center;
+    margin: 0;
+}
+
+.card-row-content {
+    display: flex;
+    height: calc(100% - 3rem);
+    margin-top: 1.5rem;
+    gap: 3rem;
+}
+
+.card-text-col {
+    width: 40%;
+    position: relative;
+    top: 5%;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.card-description {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.card-link-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.card-link-underline {
+    color: white;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.card-image-col {
+    position: relative;
+    width: 60%;
+    height: 100%;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+}
+
+.card-image-inner-motion {
+    width: 100%;
+    height: 100%;
+}
+
+.card-image-tag {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+@media (max-width: 1024px) {
+    .card-main {
+        width: 90%;
+        padding: 2rem;
+        height: auto;
+        min-height: 600px;
+    }
+
+    .card-row-content {
+        flex-direction: column;
+        gap: 2rem;
+    }
+
+    .card-text-col,
+    .card-image-col {
+        width: 100%;
+    }
+
+    .card-text-col {
+        top: 0;
+    }
+
+    .card-image-col {
+        height: 300px;
+    }
+}

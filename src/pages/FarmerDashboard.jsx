@@ -10,10 +10,10 @@ import {
 } from 'lucide-react';
 import DashboardLayout from '../components/common/DashboardLayout';
 import {
-    farmerProfile as mockProfile, agriTrustScore as mockTrustScore, 
+    farmerProfile as mockProfile, agriTrustScore as mockTrustScore,
     currentCrops as mockCrops, weatherData as mockWeather,
-    loanEligibility as mockLoanEligibility, marketPrices as mockMarketPrices, 
-    satelliteData, navLinks
+    loanEligibility as mockLoanEligibility, marketPrices as mockMarketPrices,
+    satelliteData, cropHistory as mockHistory, navLinks
 } from '../data/mockData';
 import API_BASE_URL from '../lib/api';
 import { getTrustScore } from '../services/trustScoreService';
@@ -44,11 +44,11 @@ export default function FarmerDashboard() {
         const loadData = async () => {
             try {
                 setLoading(true);
-                
+
                 // Get farmer ID from auth context
                 const userData = getUserData();
                 const farmer_id = userData?.farmer_id || userData?.id;
-                
+
                 if (!farmer_id) {
                     console.warn('No farmer ID found, using mock data');
                     setLoading(false);
@@ -119,7 +119,7 @@ export default function FarmerDashboard() {
                     const farmsResponse = await getFarmsByFarmer(farmer_id);
                     if (farmsResponse.success && farmsResponse.data) {
                         const farms = farmsResponse.data;
-                        
+
                         // Fetch crops for all farms
                         const allCrops = [];
                         for (const farm of farms) {
@@ -132,18 +132,18 @@ export default function FarmerDashboard() {
                                 console.warn(`Crops not available for farm ${farm.farm_id}`);
                             }
                         }
-                        
+
                         if (allCrops.length > 0) {
                             setCrops(allCrops.slice(0, 3).map(crop => ({
                                 name: crop.crop_type,
                                 area: `${crop.sowing_area_acres} acres`,
                                 status: crop.status || 'Growing',
                                 health: 'Healthy', // Can be enhanced with NDVI data
-                                daysToHarvest: crop.expected_harvest_date ? 
-                                    Math.ceil((new Date(crop.expected_harvest_date) - new Date()) / (1000 * 60 * 60 * 24)) : 
+                                daysToHarvest: crop.expected_harvest_date ?
+                                    Math.ceil((new Date(crop.expected_harvest_date) - new Date()) / (1000 * 60 * 60 * 24)) :
                                     null
                             })));
-                            
+
                             // Fetch weather for first farm
                             if (farms[0]) {
                                 try {
@@ -164,7 +164,7 @@ export default function FarmerDashboard() {
                                     console.warn('Weather data not available:', err.message);
                                 }
                             }
-                            
+
                             // Fetch market price for first crop
                             if (allCrops[0]) {
                                 try {
@@ -216,10 +216,10 @@ export default function FarmerDashboard() {
                         className="farmer-dash__error"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        style={{ 
-                            padding: '1rem', 
-                            marginBottom: '1rem', 
-                            backgroundColor: '#fee', 
+                        style={{
+                            padding: '1rem',
+                            marginBottom: '1rem',
+                            backgroundColor: '#fee',
                             borderRadius: '8px',
                             color: '#c00'
                         }}
@@ -228,7 +228,7 @@ export default function FarmerDashboard() {
                         Some data could not be loaded. Showing available information.
                     </motion.div>
                 )}
-                
+
                 {/* Header */}
                 <motion.div
                     className="farmer-dash__header"
@@ -237,7 +237,7 @@ export default function FarmerDashboard() {
                     transition={{ duration: 0.5 }}
                 >
                     <div className="farmer-dash__welcome">
-                        <h1>Welcome back, <span className="text-gradient">{profile.name.split(' ')[0]}</span> 👋</h1>
+                        <h1>Welcome back, <span className="text-posh">{profile.name.split(' ')[0]}</span> 👋</h1>
                         <p className="farmer-dash__subtitle">
                             <MapPin size={14} /> {profile.village}, {profile.district} ·
                             ID: {profile.id}
@@ -374,8 +374,8 @@ export default function FarmerDashboard() {
                                     />
                                     <defs>
                                         <linearGradient id="dashScoreGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                            <stop offset="0%" stopColor="#2D6A4F" />
-                                            <stop offset="100%" stopColor="#D4A017" />
+                                            <stop offset="0%" stopColor="var(--color-evergreen)" />
+                                            <stop offset="100%" stopColor="var(--color-moss)" />
                                         </linearGradient>
                                     </defs>
                                 </svg>
@@ -435,7 +435,7 @@ export default function FarmerDashboard() {
                         </div>
 
                         <div className="crop-cards">
-                            {currentCrops.map((crop, i) => (
+                            {crops.map((crop, i) => (
                                 <div key={i} className="crop-card">
                                     <div className="crop-card__header">
                                         <span className="crop-card__name">{crop.name}</span>
@@ -495,11 +495,11 @@ export default function FarmerDashboard() {
                             <div className="weather-widget__details">
                                 <div className="weather-widget__detail">
                                     <Droplets size={16} />
-                                    <span>Humidity: {weatherData.current.humidity}%</span>
+                                    <span>Humidity: {weather.current.humidity}%</span>
                                 </div>
                                 <div className="weather-widget__detail">
                                     <CloudSun size={16} />
-                                    <span>Season Rain: {weatherData.season.totalRainfall}mm</span>
+                                    <span>Season Rain: {mockWeather.season.totalRainfall}mm</span>
                                 </div>
                                 <div className="weather-widget__detail">
                                     <BarChart3 size={16} />
@@ -507,7 +507,7 @@ export default function FarmerDashboard() {
                                 </div>
                             </div>
 
-                            {weatherData.alerts.map((alert, i) => (
+                            {mockWeather.alerts.map((alert, i) => (
                                 <div key={i} className="weather-widget__alert">
                                     <AlertTriangle size={14} />
                                     <span>{alert.message}</span>
@@ -515,7 +515,7 @@ export default function FarmerDashboard() {
                             ))}
 
                             <div className="weather-widget__forecast">
-                                {weatherData.forecast.map((f, i) => (
+                                {weather.forecast.map((f, i) => (
                                     <div key={i} className="weather-widget__forecast-day">
                                         <span className="weather-widget__forecast-label">{f.day}</span>
                                         <span className="weather-widget__forecast-temp">{f.temp}°</span>
@@ -547,7 +547,7 @@ export default function FarmerDashboard() {
                                 <span>Mandi</span>
                                 <span>Trend</span>
                             </div>
-                            {marketPrices.slice(0, 4).map((mp, i) => (
+                            {mockMarketPrices.slice(0, 4).map((mp, i) => (
                                 <div key={i} className="market-table__row">
                                     <span className="market-table__crop">{mp.crop}</span>
                                     <span>₹{mp.msp}</span>
@@ -602,8 +602,110 @@ export default function FarmerDashboard() {
                             )}
                         </div>
                     </motion.div>
+
+                    {/* NEW: Yield Analytics & Community Benchmarking */}
+                    <YieldAnalyticsCard history={mockHistory} />
+                    <CommunityBenchmarkingCard profile={profile} />
                 </div>
             </div>
         </DashboardLayout>
+    );
+}
+
+// ----- ADDITIONAL ANALYTICS COMPONENTS -----
+
+function YieldAnalyticsCard({ history }) {
+    return (
+        <motion.div
+            className="dash-card dash-card--analytics"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8 }}
+        >
+            <div className="dash-card__header">
+                <h3>Yield Performance Review</h3>
+                <span className="badge-posh">Historical</span>
+            </div>
+            <div className="yield-trend">
+                <div className="yield-chart">
+                    {history.map((season, i) => (
+                        <div key={i} className="yield-column">
+                            <div className="yield-bars">
+                                {season.crops.map((crop, j) => (
+                                    <motion.div
+                                        key={j}
+                                        className="yield-bar"
+                                        initial={{ height: 0 }}
+                                        animate={{ height: `${(crop.yield / 60) * 100}%` }}
+                                        transition={{ delay: 0.5 + (i * 0.1) }}
+                                        style={{ backgroundColor: j % 2 === 0 ? 'var(--color-evergreen)' : 'var(--color-moss)' }}
+                                    >
+                                        <span className="yield-val">{crop.yield}</span>
+                                    </motion.div>
+                                ))}
+                            </div>
+                            <span className="yield-label">{season.season.split(' ')[0]}</span>
+                        </div>
+                    ))}
+                </div>
+                <div className="yield-stats-mini">
+                    <div className="y-stat">
+                        <span className="y-label">Avg Yield</span>
+                        <span className="y-val">48.5 Qtl / Acre</span>
+                    </div>
+                    <div className="y-stat">
+                        <span className="y-label">Area Growth</span>
+                        <span className="y-val text-success">+12% YoY</span>
+                    </div>
+                </div>
+            </div>
+        </motion.div>
+    );
+}
+
+function CommunityBenchmarkingCard({ profile }) {
+    return (
+        <motion.div
+            className="dash-card dash-card--community"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.9 }}
+        >
+            <div className="dash-card__header">
+                <h3>Village Benchmark</h3>
+                <span className="text-muted text-xs">{profile.village} Region</span>
+            </div>
+            <div className="benchmark-content">
+                <div className="benchmark-metric">
+                    <div className="b-top">
+                        <span className="b-label">Your Efficiency Rank</span>
+                        <span className="b-rank">Top 15%</span>
+                    </div>
+                    <div className="b-gauge">
+                        <div className="b-gauge-fill" style={{ width: '85%' }} />
+                        <span className="b-marker" style={{ left: '70%' }}>Village Avg</span>
+                    </div>
+                </div>
+                <div className="benchmark-grid">
+                    <div className="b-item">
+                        <Droplets size={16} className="text-info" />
+                        <div>
+                            <span className="b-item-label">Water Usage</span>
+                            <span className="b-item-val">-8% (Smart)</span>
+                        </div>
+                    </div>
+                    <div className="b-item">
+                        <Activity size={16} className="text-success" />
+                        <div>
+                            <span className="b-item-label">Output Value</span>
+                            <span className="b-item-val">+₹14k / Acre</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div className="benchmark-footer">
+                <p>Based on 1.2k regional profiles in {profile.district}</p>
+            </div>
+        </motion.div>
     );
 }

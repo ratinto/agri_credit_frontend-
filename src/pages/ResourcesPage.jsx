@@ -10,7 +10,7 @@ const CONTENT = {
         title: 'Documentation',
         subtitle: 'Learn how to integrate and use the AgriCredit platform.',
         icon: <Book />,
-        content: 'Our documentation covers everything from farmer onboarding workflows to lender dashboard management. Whether you are a bank agent or a platform admin, find the guides you need here.'
+        content: 'Our documentation covers everything from farmer onboarding workflows to lender dashboard management. Whether you are a bank agent or a lender officer, find the guides you need here.'
     },
     '/api': {
         title: 'API Reference',
@@ -29,6 +29,18 @@ const CONTENT = {
         subtitle: 'The science behind our AI and remote sensing models.',
         icon: <Search />,
         content: 'Our research lab publishes periodic whitepapers on bias detection in rural credit, NDVI correlation with small-holder land yields, and the ethics of background credit scoring.'
+    },
+    '/resources': {
+        title: 'Platform Resources',
+        subtitle: 'Everything you need to get started with AgriCredit.',
+        icon: <Book />,
+        content: 'Access our full library of guides, templates, and training materials designed for financial institutions and field officers.'
+    },
+    '/events': {
+        title: 'Upcoming Events',
+        subtitle: 'Join us at our next workshop or webinar.',
+        icon: <FileText />,
+        content: 'We regularly host field workshops for farmers and webinars for banking partners to discuss the future of agricultural credit.'
     }
 };
 

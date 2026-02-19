@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, ChevronDown } from 'lucide-react';
-import logo from '../../assets/logo.png';
+import logo from '../../assets/a.jpeg';
 import './Navbar.css';
 
 export default function Navbar() {
@@ -29,7 +29,6 @@ export default function Navbar() {
             name: 'Platform',
             children: [
                 { name: 'For Lenders', path: '/lender/dashboard', desc: 'Bank/NBFC dashboard' },
-                { name: 'Admin Panel', path: '/admin/dashboard', desc: 'Platform governance' },
             ],
         },
         { name: 'Features', path: '/features' },

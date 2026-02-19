@@ -17,7 +17,7 @@ export default function FarmerProfile() {
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
                 >
-                    <h1>My <span className="text-gradient">Profile</span></h1>
+                    <h1>My <span className="text-posh">Profile</span></h1>
                     <button className="farmer-profile__edit-btn">
                         <Edit size={16} /> Edit Profile
                     </button>

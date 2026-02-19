@@ -38,8 +38,7 @@ export default function Sidebar({ links, userType, userName }) {
 
     const typeColors = {
         farmer: { bg: '#D8F3DC', text: '#1B4332', label: 'Farmer Portal' },
-        lender: { bg: '#FFF8E1', text: '#B8860B', label: 'Lender Admin Panel' },
-        admin: { bg: '#E8F4FD', text: '#1565C0', label: 'Bank Admin Panel' },
+        lender: { bg: '#FFF8E1', text: '#B8860B', label: 'Lender Portal' },
     };
 
     const config = typeColors[userType] || typeColors.farmer;

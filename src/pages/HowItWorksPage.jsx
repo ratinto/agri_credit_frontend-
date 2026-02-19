@@ -42,7 +42,7 @@ export default function HowItWorksPage() {
                     animate={{ opacity: 1, y: 0 }}
                 >
                     <span className="section-header__badge">Process Overiew</span>
-                    <h1 className="static-page__title">How It <span className="text-gradient">Works</span></h1>
+                    <h1 className="static-page__title">How It <span className="text-posh">Works</span></h1>
                     <p className="static-page__subtitle">
                         A transparent, data-driven journey from field registration to financial empowerment.
                     </p>

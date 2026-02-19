@@ -10,8 +10,10 @@
 }
 
 .farmer-profile__header h1 {
-    font-size: 1.6rem;
-    font-weight: 800;
+    font-size: 1.8rem;
+    font-weight: 500;
+    font-family: var(--font-serif);
+    color: var(--color-evergreen);
 }
 
 .farmer-profile__edit-btn {
@@ -34,10 +36,10 @@
 /* Completion */
 .profile-completion {
     background: white;
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-sm);
     padding: 1.5rem;
     margin-bottom: 1.5rem;
-    border: 1px solid rgba(0, 0, 0, 0.06);
+    border: 1px solid var(--color-sage-hint);
     box-shadow: var(--shadow-sm);
 }
 
@@ -54,10 +56,10 @@
 }
 
 .profile-completion__pct {
-    font-family: var(--font-primary);
-    font-size: 1.2rem;
-    font-weight: 800;
-    color: var(--color-primary);
+    font-family: var(--font-serif);
+    font-size: 1.4rem;
+    font-weight: 500;
+    color: var(--color-evergreen);
 }
 
 .profile-completion__bar {
@@ -70,7 +72,7 @@
 
 .profile-completion__fill {
     height: 100%;
-    background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
+    background: var(--color-evergreen);
     border-radius: var(--radius-pill);
     transition: width 1.5s ease;
 }
@@ -117,14 +119,14 @@
     width: 64px;
     height: 64px;
     min-width: 64px;
-    border-radius: var(--radius-full);
-    background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+    border-radius: var(--radius-sm);
+    background: var(--color-evergreen);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-family: var(--font-primary);
-    font-size: 1.5rem;
-    font-weight: 800;
+    font-family: var(--font-serif);
+    font-size: 1.8rem;
+    font-weight: 500;
     color: white;
 }
 
@@ -223,9 +225,9 @@
     justify-content: center;
     gap: 0.5rem;
     padding: 1.5rem;
-    background: linear-gradient(135deg, #D8F3DC, #B7E4C7);
-    border-radius: var(--radius-md);
-    color: var(--color-primary-dark);
+    background: var(--color-sage-hint);
+    border-radius: var(--radius-sm);
+    color: var(--color-evergreen);
     font-size: 0.8rem;
     margin-bottom: 0.75rem;
 }
@@ -271,9 +273,9 @@
 
 .consent-card {
     padding: 1.5rem;
-    background: linear-gradient(135deg, #f0f9f4, #fff);
-    border-radius: var(--radius-lg);
-    border: 1px solid rgba(45, 106, 79, 0.1);
+    background: var(--color-bg);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-sage-hint);
 }
 
 .consent-card h4 {

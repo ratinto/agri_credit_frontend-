@@ -15,7 +15,7 @@ export default function AboutPage() {
                     animate={{ opacity: 1, y: 0 }}
                 >
                     <span className="section-header__badge">Our Mission</span>
-                    <h1 className="static-page__title">About <span className="text-gradient">AgriCredit</span></h1>
+                    <h1 className="static-page__title">About <span className="text-posh">AgriCredit</span></h1>
                     <p className="static-page__subtitle">
                         Redefining rural finance through empathy, data, and ethical artificial intelligence.
                     </p>
@@ -38,12 +38,12 @@ export default function AboutPage() {
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '2rem' }}>
                     <motion.div className="static-content" whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
-                        <div style={{ color: 'var(--color-primary)', marginBottom: '1rem' }}><Target size={32} /></div>
+                        <div style={{ color: 'var(--color-evergreen)', marginBottom: '1rem' }}><Target size={32} /></div>
                         <h3>Our Vision</h3>
                         <p>To become the digital backbone of rural lending in India, ensuring every honest farmer has the capital they need to grow their future.</p>
                     </motion.div>
                     <motion.div className="static-content" whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
-                        <div style={{ color: 'var(--color-secondary)', marginBottom: '1rem' }}><Heart size={32} /></div>
+                        <div style={{ color: 'var(--color-evergreen)', marginBottom: '1rem' }}><Heart size={32} /></div>
                         <h3>Our Values</h3>
                         <p>Radical transparency, data privacy, and ethical AI. We never use a "black-box" model; if we say no, we explain why and how to get to a yes.</p>
                     </motion.div>

@@ -252,14 +252,60 @@ export const riskDistribution = [
 ];
 
 export const farmersList = [
-  { id: 'FRM-001', name: 'Rajesh Kumar', score: 74, risk: 'Low', district: 'Varanasi', loanAmount: 180000, status: 'Active', landSize: '4.2 Acres', crop: 'Wheat' },
-  { id: 'FRM-002', name: 'Sunita Devi', score: 62, risk: 'Medium', district: 'Allahabad', loanAmount: 95000, status: 'Active', landSize: '2.5 Acres', crop: 'Rice' },
-  { id: 'FRM-003', name: 'Mohan Singh', score: 85, risk: 'Low', district: 'Agra', loanAmount: 320000, status: 'Active', landSize: '12.0 Acres', crop: 'Potatoes' },
-  { id: 'FRM-004', name: 'Priya Sharma', score: 45, risk: 'High', district: 'Lucknow', loanAmount: 50000, status: 'Review', landSize: '1.8 Acres', crop: 'Sugarcane' },
-  { id: 'FRM-005', name: 'Vikram Yadav', score: 58, risk: 'Medium', district: 'Kanpur', loanAmount: 120000, status: 'Active', landSize: '3.1 Acres', crop: 'Pulses' },
-  { id: 'FRM-006', name: 'Lakshmi Bai', score: 71, risk: 'Low', district: 'Jhansi', loanAmount: 200000, status: 'Active', landSize: '5.5 Acres', crop: 'Mustard' },
-  { id: 'FRM-007', name: 'Amit Patel', score: 38, risk: 'High', district: 'Bareilly', loanAmount: 45000, status: 'Flagged', landSize: '1.2 Acres', crop: 'Wheat' },
-  { id: 'FRM-008', name: 'Geeta Mishra', score: 79, risk: 'Low', district: 'Varanasi', loanAmount: 250000, status: 'Active', landSize: '6.4 Acres', crop: 'Rice' },
+  { id: 'FRM-001', name: 'Rajesh Kumar', score: 74, risk: 'Low', district: 'Varanasi', loanAmount: 180000, status: 'Active', landSize: '4.2 Acres', crop: 'Wheat', lastRepayment: '2025-02-01', yieldIndex: 1.1 },
+  { id: 'FRM-002', name: 'Sunita Devi', score: 62, risk: 'Medium', district: 'Allahabad', loanAmount: 95000, status: 'Active', landSize: '2.5 Acres', crop: 'Rice', lastRepayment: '2025-01-28', yieldIndex: 0.9 },
+  { id: 'FRM-003', name: 'Mohan Singh', score: 85, risk: 'Low', district: 'Agra', loanAmount: 320000, status: 'Active', landSize: '12.0 Acres', crop: 'Potatoes', lastRepayment: '2025-02-05', yieldIndex: 1.3 },
+  { id: 'FRM-004', name: 'Priya Sharma', score: 45, risk: 'High', district: 'Lucknow', loanAmount: 50000, status: 'Review', landSize: '1.8 Acres', crop: 'Sugarcane', lastRepayment: '2024-12-15', yieldIndex: 0.7 },
+  { id: 'FRM-005', name: 'Vikram Yadav', score: 58, risk: 'Medium', district: 'Kanpur', loanAmount: 120000, status: 'Active', landSize: '3.1 Acres', crop: 'Pulses', lastRepayment: '2025-01-20', yieldIndex: 1.0 },
+  { id: 'FRM-006', name: 'Lakshmi Bai', score: 71, risk: 'Low', district: 'Jhansi', loanAmount: 200000, status: 'Active', landSize: '5.5 Acres', crop: 'Mustard', lastRepayment: '2025-02-10', yieldIndex: 1.1 },
+  { id: 'FRM-007', name: 'Amit Patel', score: 38, risk: 'High', district: 'Bareilly', loanAmount: 45000, status: 'Flagged', landSize: '1.2 Acres', crop: 'Wheat', lastRepayment: '2024-11-30', yieldIndex: 0.6 },
+  { id: 'FRM-008', name: 'Geeta Mishra', score: 79, risk: 'Low', district: 'Varanasi', loanAmount: 250000, status: 'Active', landSize: '6.4 Acres', crop: 'Rice', lastRepayment: '2025-02-08', yieldIndex: 1.2 },
+  { id: 'FRM-009', name: 'Sanjay Gupta', score: 67, risk: 'Medium', district: 'Gorakhpur', loanAmount: 140000, status: 'Active', landSize: '3.8 Acres', crop: 'Maize', lastRepayment: '2025-01-25', yieldIndex: 1.0 },
+  { id: 'FRM-010', name: 'Anita Singh', score: 82, risk: 'Low', district: 'Mirzapur', loanAmount: 280000, status: 'Active', landSize: '9.2 Acres', crop: 'Wheat', lastRepayment: '2025-02-12', yieldIndex: 1.25 },
+  { id: 'FRM-011', name: 'Ravi Prakash', score: 51, risk: 'Medium', district: 'Ghazipur', loanAmount: 75000, status: 'Review', landSize: '2.1 Acres', crop: 'Rice', lastRepayment: '2025-01-05', yieldIndex: 0.85 },
+  { id: 'FRM-012', name: 'Suman Lata', score: 76, risk: 'Low', district: 'Jaunpur', loanAmount: 195000, status: 'Active', landSize: '4.8 Acres', crop: 'Pulses', lastRepayment: '2025-02-03', yieldIndex: 1.15 },
+  { id: 'FRM-013', name: 'Deepak Tiwari', score: 42, risk: 'High', district: 'Mathura', loanAmount: 60000, status: 'Flagged', landSize: '1.5 Acres', crop: 'Maize', lastRepayment: '2024-12-20', yieldIndex: 0.75 },
+  { id: 'FRM-014', name: 'Meena Kumari', score: 69, risk: 'Medium', district: 'Aligarh', loanAmount: 110000, status: 'Active', landSize: '2.9 Acres', crop: 'Mustard', lastRepayment: '2025-01-30', yieldIndex: 0.95 },
+  { id: 'FRM-015', name: 'Rameshwar Dayal', score: 88, risk: 'Low', district: 'Agra', loanAmount: 450000, status: 'Active', landSize: '15.5 Acres', crop: 'Potatoes', lastRepayment: '2025-02-14', yieldIndex: 1.4 },
+  { id: 'FRM-016', name: 'Savita Devi', score: 55, risk: 'Medium', district: 'Ballia', loanAmount: 85000, status: 'Active', landSize: '2.4 Acres', crop: 'Wheat', lastRepayment: '2025-01-15', yieldIndex: 0.9 },
+  { id: 'FRM-017', name: 'Gopal Krishna', score: 73, risk: 'Low', district: 'Varanasi', loanAmount: 220000, status: 'Active', landSize: '5.1 Acres', crop: 'Rice', lastRepayment: '2025-02-07', yieldIndex: 1.1 },
+  { id: 'FRM-018', name: 'Indu Sharma', score: 35, risk: 'High', district: 'Deoria', loanAmount: 40000, status: 'Flagged', landSize: '1.1 Acres', crop: 'Sugar', lastRepayment: '2024-10-25', yieldIndex: 0.55 },
+  { id: 'FRM-019', name: 'Mohit Verma', score: 64, risk: 'Medium', district: 'Meerut', loanAmount: 130000, status: 'Active', landSize: '3.4 Acres', crop: 'Maize', lastRepayment: '2025-01-22', yieldIndex: 1.0 },
+  { id: 'FRM-020', name: 'Radha Rani', score: 81, risk: 'Low', district: 'Hathras', loanAmount: 300000, status: 'Active', landSize: '10.5 Acres', crop: 'Wheat', lastRepayment: '2025-02-11', yieldIndex: 1.2 },
+  { id: 'FRM-021', name: 'Vinod Chand', score: 48, risk: 'High', district: 'Bijnor', loanAmount: 55000, status: 'Review', landSize: '1.7 Acres', crop: 'Sugarcane', lastRepayment: '2024-12-05', yieldIndex: 0.8 },
+  { id: 'FRM-022', name: 'Komal Singh', score: 70, risk: 'Low', district: 'Amroha', loanAmount: 185000, status: 'Active', landSize: '4.5 Acres', crop: 'Rice', lastRepayment: '2025-02-04', yieldIndex: 1.05 },
+  { id: 'FRM-023', name: 'Sohan Lal', score: 57, risk: 'Medium', district: 'Rampur', loanAmount: 105000, status: 'Active', landSize: '2.8 Acres', crop: 'Maize', lastRepayment: '2025-01-18', yieldIndex: 0.95 },
+  { id: 'FRM-024', name: 'Usha Devi', score: 77, risk: 'Low', district: 'Pilibhit', loanAmount: 240000, status: 'Active', landSize: '6.2 Acres', crop: 'Wheat', lastRepayment: '2025-02-09', yieldIndex: 1.15 },
+  { id: 'FRM-025', name: 'Ram Prasad', score: 40, risk: 'High', district: 'Hardoi', loanAmount: 48000, status: 'Flagged', landSize: '1.3 Acres', crop: 'Rice', lastRepayment: '2024-11-20', yieldIndex: 0.65 },
+  { id: 'FRM-026', name: 'Preeti Kumari', score: 68, risk: 'Medium', district: 'Unnao', loanAmount: 125000, status: 'Active', landSize: '3.2 Acres', crop: 'Mustard', lastRepayment: '2025-01-29', yieldIndex: 1.0 },
+  { id: 'FRM-027', name: 'Suresh Mani', score: 84, risk: 'Low', district: 'Basti', loanAmount: 350000, status: 'Active', landSize: '13.2 Acres', crop: 'Wheat', lastRepayment: '2025-02-13', yieldIndex: 1.35 },
+  { id: 'FRM-028', name: 'Nisha Bano', score: 53, risk: 'Medium', district: 'Mau', loanAmount: 82000, status: 'Active', landSize: '2.2 Acres', crop: 'Pulses', lastRepayment: '2025-01-12', yieldIndex: 0.88 },
+  { id: 'FRM-029', name: 'Alok Nath', score: 72, risk: 'Low', district: 'Deoria', loanAmount: 210000, status: 'Active', landSize: '5.4 Acres', crop: 'Potatoes', lastRepayment: '2025-02-06', yieldIndex: 1.12 },
+  { id: 'FRM-030', name: 'Mamta Soni', score: 44, risk: 'High', district: 'Sultanpur', loanAmount: 52000, status: 'Review', landSize: '1.6 Acres', crop: 'Wheat', lastRepayment: '2024-12-28', yieldIndex: 0.78 },
+];
+
+export const regionalRisk = [
+  { region: 'East UP', score: 68, risk: 'Moderate', trend: 'up' },
+  { region: 'West UP', score: 72, risk: 'Low', trend: 'stable' },
+  { region: 'Central UP', score: 64, risk: 'Moderate', trend: 'down' },
+  { region: 'Bundelkhand', score: 52, risk: 'High', trend: 'down' },
+];
+
+export const portfolioMonthlyTrends = [
+  { month: 'Sep', disbursed: 12.5, collection: 11.2, npas: 0.8 },
+  { month: 'Oct', disbursed: 15.2, collection: 13.8, npas: 0.7 },
+  { month: 'Nov', disbursed: 18.4, collection: 14.2, npas: 0.9 },
+  { month: 'Dec', disbursed: 22.1, collection: 19.5, npas: 1.1 },
+  { month: 'Jan', disbursed: 28.5, collection: 25.8, npas: 1.0 },
+  { month: 'Feb', disbursed: 32.2, collection: 29.4, npas: 0.9 },
+];
+
+export const cropDistribution = [
+  { crop: 'Wheat', share: 35, avgYield: 1.2, riskIndex: 0.2 },
+  { crop: 'Rice', share: 25, avgYield: 1.1, riskIndex: 0.3 },
+  { crop: 'Sugarcane', share: 15, avgYield: 1.4, riskIndex: 0.4 },
+  { crop: 'Maize', share: 10, avgYield: 1.0, riskIndex: 0.5 },
+  { crop: 'Others', share: 15, avgYield: 0.9, riskIndex: 0.3 },
 ];
 
 export const pendingLoans = [
@@ -294,77 +340,6 @@ export const mlInsights = {
   },
 };
 
-// ===== ADMIN DATA =====
-export const adminStats = {
-  totalUsers: 15234,
-  activeFarmers: 12847,
-  activeLenders: 42,
-  systemHealth: 98.5,
-  dataQuality: 94.2,
-  apiUptime: 99.9,
-  modelsDeployed: 4,
-  alertsPending: 7,
-};
-
-export const systemHealth = {
-  cpu: 42,
-  memory: 68,
-  storage: 55,
-  apiLatency: 120,
-  activeConnections: 3420,
-  errorRate: 0.02,
-};
-
-export const regionData = [
-  { region: 'Uttar Pradesh', farmers: 4520, avgScore: 68, defaultRate: 3.8 },
-  { region: 'Maharashtra', farmers: 3180, avgScore: 71, defaultRate: 3.2 },
-  { region: 'Madhya Pradesh', farmers: 2340, avgScore: 64, defaultRate: 5.1 },
-  { region: 'Rajasthan', farmers: 1560, avgScore: 59, defaultRate: 6.2 },
-  { region: 'Bihar', farmers: 1247, avgScore: 61, defaultRate: 5.8 },
-];
-
-export const consentData = {
-  totalConsents: 12847,
-  activeConsents: 12340,
-  revokedConsents: 507,
-  pendingConsents: 234,
-  consentRate: 96.1,
-};
-
-// ===== ENTERPRISE BANK DATA =====
-export const bankHQStats = {
-  totalLoanBook: 12450000000, // 1245 Cr
-  npaRatio: 1.84,
-  portfolioGrowth: 15.2,
-  activeBranches: 124,
-  disbursementTarget: 85,
-  regulatoryCompliance: 100,
-  pslTarget: 92,
-  avgYield: 8.4,
-};
-
-export const branchPerformance = [
-  { id: 'BR-01', name: 'Varanasi Central', head: 'A.P. Singh', loans: 450, volume: '₹84 Cr', npa: 1.2, status: 'On Track' },
-  { id: 'BR-02', name: 'Lucknow Main', head: 'R. K. Verma', loans: 380, volume: '₹72 Cr', npa: 2.1, status: 'Review' },
-  { id: 'BR-03', name: 'Allahabad South', head: 'S. Mishra', loans: 520, volume: '₹110 Cr', npa: 1.5, status: 'Excellent' },
-  { id: 'BR-04', name: 'Kanpur Industrial', head: 'M. Bajpai', loans: 290, volume: '₹55 Cr', npa: 3.4, status: 'High Risk' },
-];
-
-export const riskHeatmap = [
-  { state: 'Uttar Pradesh', value: 85, risk: 'Low' },
-  { state: 'Maharashtra', value: 72, risk: 'Low' },
-  { state: 'Madhya Pradesh', value: 45, risk: 'Medium' },
-  { state: 'Rajasthan', value: 38, risk: 'Medium' },
-  { state: 'Bihar', value: 24, risk: 'High' },
-];
-
-export const auditLogs = [
-  { id: 'LOG-001', user: 'System', action: 'Policy Engine Update', timestamp: '2025-01-18 10:24', status: 'Success' },
-  { id: 'LOG-002', user: 'Admin_Amit', action: 'SSO Certificate Renewal', timestamp: '2025-01-18 09:15', status: 'Success' },
-  { id: 'LOG-003', user: 'Risk_User', action: 'Overrode rejection: FRM-772', timestamp: '2025-01-17 14:30', status: 'Flagged' },
-  { id: 'LOG-004', user: 'System', action: 'Daily Core-Banking Sync', timestamp: '2025-01-18 00:05', status: 'Success' },
-];
-
 export const navLinks = {
   farmer: [
     { name: 'Dashboard', path: '/farmer/dashboard', icon: 'LayoutDashboard' },
@@ -382,14 +357,6 @@ export const navLinks = {
     { name: 'Loan Decisions', path: '/lender/decisions', icon: 'ClipboardCheck' },
     { name: 'Portfolio Analytics', path: '/lender/analytics', icon: 'BarChart3' },
     { name: 'Fraud & Alerts', path: '/lender/fraud', icon: 'AlertTriangle' },
-    { name: 'Settings & Admin', path: '/lender/settings', icon: 'Settings' },
-  ],
-  admin: [
-    { name: 'HQ Overview', path: '/admin/dashboard', icon: 'LayoutDashboard' },
-    { name: 'Branch Performance', path: '/admin/branches', icon: 'Globe' },
-    { name: 'Enterprise Analytics', path: '/admin/analytics', icon: 'BarChart3' },
-    { name: 'Compliance & Audit', path: '/admin/compliance', icon: 'Shield' },
-    { name: 'Policy Engine', path: '/admin/policy', icon: 'Brain' },
-    { name: 'Admin Console', path: '/admin/settings', icon: 'Settings' },
+    { name: 'Settings', path: '/lender/settings', icon: 'Settings' },
   ],
 };

@@ -11,9 +11,10 @@
 }
 
 .farmer-dash__welcome h1 {
-    font-size: 1.6rem;
-    font-weight: 800;
-    color: var(--color-primary-dark);
+    font-size: 1.8rem;
+    font-weight: 500;
+    font-family: var(--font-serif);
+    color: var(--color-evergreen);
 }
 
 .farmer-dash__subtitle {
@@ -56,9 +57,9 @@
 
 /* Completion Banner */
 .farmer-dash__completion {
-    background: linear-gradient(135deg, #FFF8E1, #FFFDE7);
-    border: 1px solid #FFECB3;
-    border-radius: var(--radius-lg);
+    background: var(--color-sage-hint);
+    border: 1px solid var(--color-mint);
+    border-radius: var(--radius-sm);
     padding: 1rem 1.25rem;
     margin-bottom: 1.5rem;
 }
@@ -88,7 +89,7 @@
 
 .farmer-dash__completion-fill {
     height: 100%;
-    background: linear-gradient(90deg, #D4A017, #E8C547);
+    background: var(--color-sage);
     border-radius: var(--radius-pill);
     transition: width 1s ease;
 }
@@ -126,8 +127,8 @@
 }
 
 .stat-card--score {
-    background: linear-gradient(135deg, #f0f9f4, #fff);
-    border-color: rgba(45, 106, 79, 0.1);
+    background: var(--color-bg);
+    border-color: var(--color-sage-hint);
 }
 
 .stat-card__icon-wrap {
@@ -142,19 +143,19 @@
 }
 
 .stat-card__icon-wrap--green {
-    background: linear-gradient(135deg, #2D6A4F, #40916C);
+    background: var(--color-evergreen);
 }
 
 .stat-card__icon-wrap--gold {
-    background: linear-gradient(135deg, #D4A017, #E8C547);
+    background: var(--color-sage);
 }
 
 .stat-card__icon-wrap--blue {
-    background: linear-gradient(135deg, #3182CE, #63B3ED);
+    background: var(--color-info);
 }
 
 .stat-card__icon-wrap--teal {
-    background: linear-gradient(135deg, #0D9488, #2DD4BF);
+    background: var(--color-success);
 }
 
 .stat-card__content {
@@ -353,7 +354,7 @@
 
 .score-display__history-fill {
     width: 100%;
-    background: linear-gradient(to top, var(--color-primary), var(--color-primary-light));
+    background: var(--color-evergreen);
     border-radius: var(--radius-sm);
     transition: height 1s ease;
 }
@@ -382,18 +383,19 @@
 }
 
 .score-explanation--positive {
-    background: #F0FFF4;
-    color: #276749;
+    background: var(--color-sage-hint);
+    color: var(--color-evergreen);
 }
 
 .score-explanation--negative {
-    background: #FFFBEA;
-    color: #744210;
+    background: var(--color-bg);
+    border: 1px solid var(--color-sage-hint);
+    color: var(--color-evergreen);
 }
 
 .score-explanation--info {
-    background: #EBF8FF;
-    color: #2A4365;
+    background: var(--color-bg);
+    color: var(--color-evergreen);
 }
 
 .score-explanation__icon {
@@ -483,7 +485,7 @@
 
 .crop-card__ndvi-fill {
     height: 100%;
-    background: linear-gradient(90deg, #2D6A4F, #74C69D);
+    background: var(--color-evergreen);
     border-radius: var(--radius-pill);
 }
 
@@ -536,11 +538,11 @@
     align-items: center;
     gap: 0.5rem;
     padding: 0.6rem 0.85rem;
-    background: #FFF8E1;
-    border: 1px solid #FFECB3;
+    background: var(--color-sage-hint);
+    border: 1px solid var(--color-sage);
     border-radius: var(--radius-md);
     font-size: 0.75rem;
-    color: #B8860B;
+    color: var(--color-evergreen);
     margin-bottom: 1rem;
 }
 
@@ -632,8 +634,8 @@
 .loan-card__amount {
     text-align: center;
     padding: 1.5rem;
-    background: linear-gradient(135deg, #f0f9f4, #fff);
-    border-radius: var(--radius-lg);
+    background: var(--color-sage-hint);
+    border-radius: var(--radius-sm);
     margin-bottom: 1rem;
 }
 
@@ -682,10 +684,10 @@
     align-items: center;
     gap: 0.5rem;
     padding: 0.6rem 0.85rem;
-    background: #FFF8E1;
+    background: var(--color-sage-hint);
     border-radius: var(--radius-md);
     font-size: 0.8rem;
-    color: #B8860B;
+    color: var(--color-evergreen);
 }
 
 /* ===== RESPONSIVE ===== */
@@ -732,4 +734,191 @@
         grid-template-columns: 1.5fr 1fr 1fr 1fr;
         font-size: 0.75rem;
     }
+}
+
+/* New Farmer Analytics Styles */
+.badge-posh {
+    padding: 0.25rem 0.6rem;
+    background: var(--color-surface);
+    color: var(--color-evergreen);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    border-radius: var(--radius-pill);
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.yield-trend {
+    margin-top: 1.5rem;
+}
+
+.yield-chart {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    height: 120px;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--color-surface);
+}
+
+.yield-column {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+.yield-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+    height: 80px;
+    width: 30px;
+}
+
+.yield-bar {
+    flex: 1;
+    border-radius: 4px 4px 0 0;
+    position: relative;
+}
+
+.yield-val {
+    position: absolute;
+    top: -18px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.65rem;
+    font-weight: 800;
+    color: var(--color-primary-dark);
+}
+
+.yield-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: var(--color-text-muted);
+}
+
+.yield-stats-mini {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.y-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.y-label {
+    font-size: 0.7rem;
+    color: var(--color-text-muted);
+    font-weight: 600;
+}
+
+.y-val {
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--color-primary-dark);
+}
+
+/* Benchmark Styles */
+.benchmark-content {
+    margin-top: 1.5rem;
+}
+
+.benchmark-metric {
+    margin-bottom: 2rem;
+}
+
+.b-top {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+}
+
+.b-label {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+}
+
+.b-rank {
+    font-weight: 800;
+    color: var(--color-evergreen);
+}
+
+.b-gauge {
+    position: relative;
+    height: 12px;
+    background: var(--color-surface);
+    border-radius: 6px;
+    overflow: visible;
+}
+
+.b-gauge-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--color-evergreen), var(--color-moss));
+    border-radius: 6px;
+}
+
+.b-marker {
+    position: absolute;
+    top: -24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: var(--color-text-muted);
+}
+
+.b-marker::after {
+    content: '';
+    width: 2px;
+    height: 36px;
+    background: var(--color-text-muted);
+    opacity: 0.3;
+    margin-top: 4px;
+}
+
+.benchmark-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.b-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    background: var(--color-bg);
+    border-radius: var(--radius-md);
+}
+
+.b-item-label {
+    display: block;
+    font-size: 0.7rem;
+    color: var(--color-text-muted);
+}
+
+.b-item-val {
+    font-weight: 700;
+    font-size: 0.85rem;
+}
+
+.benchmark-footer {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.benchmark-footer p {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    text-align: center;
+    font-style: italic;
 }
