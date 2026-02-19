@@ -7,7 +7,6 @@ import FarmerDashboard from './pages/FarmerDashboard';
 import FarmerProfile from './pages/FarmerProfile';
 import ScoreImprovement from './pages/ScoreImprovement';
 import LenderDashboard from './pages/LenderDashboard';
-import AdminDashboard from './pages/AdminDashboard';
 import FeaturesPage from './pages/FeaturesPage';
 import HowItWorksPage from './pages/HowItWorksPage';
 import AboutPage from './pages/AboutPage';
@@ -57,14 +56,6 @@ function App() {
         <Route path="/lender/analytics" element={<LenderDashboard />} />
         <Route path="/lender/fraud" element={<LenderDashboard />} />
         <Route path="/lender/settings" element={<LenderDashboard />} />
-
-        {/* Admin Routes */}
-        <Route path="/admin/dashboard" element={<AdminDashboard />} />
-        <Route path="/admin/branches" element={<AdminDashboard />} />
-        <Route path="/admin/analytics" element={<AdminDashboard />} />
-        <Route path="/admin/compliance" element={<AdminDashboard />} />
-        <Route path="/admin/policy" element={<AdminDashboard />} />
-        <Route path="/admin/settings" element={<AdminDashboard />} />
 
         {/* Catch all */}
         <Route path="*" element={<Navigate to="/" replace />} />

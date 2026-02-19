@@ -38,6 +38,10 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = (tokenData, userData) => {
+    // Save to localStorage
+    localStorage.setItem('token', tokenData);
+    localStorage.setItem('user', JSON.stringify(userData));
+    // Update state
     setToken(tokenData);
     setUser(userData);
   };

@@ -104,14 +104,25 @@ export const bankLogin = async (bank_id, password) => {
       password
     });
 
-    if (response.data.success && response.data.token) {
-      saveToken(response.data.token);
+    console.log('Full backend response:', response.data);
+
+    // Backend returns: { success, message, data: { token, bank_id, bank_name, email, role } }
+    if (response.data.success && response.data.data && response.data.data.token) {
+      const { token, ...bankData } = response.data.data;
+      
+      saveToken(token);
       saveUserData({
-        ...response.data.bank,
+        ...bankData,
         role: 'BANK',
         userType: 'lender'
       });
-      return response.data;
+      
+      // Return in the format expected by LoginPage
+      return {
+        success: true,
+        token,
+        bank: bankData
+      };
     }
 
     throw new Error(response.data.message || 'Login failed');

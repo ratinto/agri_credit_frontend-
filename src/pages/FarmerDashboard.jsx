@@ -10,10 +10,18 @@ import {
 } from 'lucide-react';
 import DashboardLayout from '../components/common/DashboardLayout';
 import {
-    farmerProfile, agriTrustScore, currentCrops, weatherData,
-    loanEligibility, marketPrices, satelliteData, navLinks
+    farmerProfile as mockProfile, agriTrustScore as mockTrustScore, 
+    currentCrops as mockCrops, weatherData as mockWeather,
+    loanEligibility as mockLoanEligibility, marketPrices as mockMarketPrices, 
+    satelliteData, navLinks
 } from '../data/mockData';
 import API_BASE_URL from '../lib/api';
+import { getTrustScore } from '../services/trustScoreService';
+import { getLoanOffers } from '../services/loanService';
+import { getFarmsByFarmer } from '../services/farmService';
+import { getCropsByFarm } from '../services/cropService';
+import { fetchWeather, fetchMarketPrice } from '../services/validationService';
+import { getUserData } from '../services/authService';
 import './FarmerDashboard.css';
 
 const fadeIn = {
@@ -23,32 +31,166 @@ const fadeIn = {
 
 export default function FarmerDashboard() {
     const [activeTab, setActiveTab] = useState('overview');
-    const [profile, setProfile] = useState(farmerProfile);
-    const [trustScore, setTrustScore] = useState(agriTrustScore);
+    const [profile, setProfile] = useState(mockProfile);
+    const [trustScore, setTrustScore] = useState(mockTrustScore);
+    const [loanOffers, setLoanOffers] = useState(mockLoanEligibility);
+    const [crops, setCrops] = useState(mockCrops);
+    const [weather, setWeather] = useState(mockWeather);
+    const [marketPrice, setMarketPrice] = useState(mockMarketPrices[0]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
         const loadData = async () => {
             try {
-                const response = await axios.get(`${API_BASE_URL}/api/farmers`);
-                if (response.data && response.data.length > 0) {
-                    const data = response.data[0];
-                    setProfile(prev => ({
-                        ...prev,
-                        name: data.name,
-                        village: data.village,
-                        district: data.district,
-                        id: `F-${data.phone.slice(-4)}`,
-                        profileCompletion: data.profile_completion
-                    }));
-                    setTrustScore(prev => ({
-                        ...prev,
-                        overall: data.trust_score,
-                        riskCategory: data.risk_level.split(' ')[0]
-                    }));
+                setLoading(true);
+                
+                // Get farmer ID from auth context
+                const userData = getUserData();
+                const farmer_id = userData?.farmer_id || userData?.id;
+                
+                if (!farmer_id) {
+                    console.warn('No farmer ID found, using mock data');
+                    setLoading(false);
+                    return;
                 }
+
+                // Fetch farmer profile
+                const farmerResponse = await axios.get(`${API_BASE_URL}/api/farmers/${farmer_id}`);
+                if (farmerResponse.data) {
+                    const data = farmerResponse.data;
+                    setProfile({
+                        name: data.name || mockProfile.name,
+                        village: data.village || mockProfile.village,
+                        district: data.district || mockProfile.district,
+                        state: data.state || mockProfile.state,
+                        id: farmer_id,
+                        phone: data.phone || mockProfile.phone,
+                        profileCompletion: data.profile_completion || 75,
+                        kycVerified: data.kyc_verified || false,
+                        familyMembers: data.family_members || mockProfile.familyMembers,
+                        bankAccount: data.bank_account || mockProfile.bankAccount,
+                        ownershipType: data.ownership_type || mockProfile.ownershipType,
+                        registeredDate: data.created_at || mockProfile.registeredDate
+                    });
+                }
+
+                // Fetch trust score
+                try {
+                    const trustScoreResponse = await getTrustScore(farmer_id);
+                    if (trustScoreResponse.success && trustScoreResponse.data) {
+                        const ts = trustScoreResponse.data;
+                        setTrustScore({
+                            overall: ts.overall_score || ts.trust_score || mockTrustScore.overall,
+                            grade: ts.grade || mockTrustScore.grade,
+                            riskCategory: ts.risk_category || ts.risk_level?.split(' ')[0] || mockTrustScore.riskCategory,
+                            breakdown: ts.breakdown || mockTrustScore.breakdown
+                        });
+                    }
+                } catch (err) {
+                    console.warn('Trust score not available:', err.message);
+                }
+
+                // Fetch loan offers
+                try {
+                    const loanResponse = await getLoanOffers(farmer_id);
+                    if (loanResponse.success && loanResponse.data) {
+                        const offers = loanResponse.data.offers || [];
+                        if (offers.length > 0) {
+                            const bestOffer = offers[0];
+                            setLoanOffers({
+                                eligible: true,
+                                recommendedAmount: bestOffer.max_loan_amount || mockLoanEligibility.recommendedAmount,
+                                interestRange: {
+                                    min: bestOffer.min_interest_rate || mockLoanEligibility.interestRange.min,
+                                    max: bestOffer.max_interest_rate || mockLoanEligibility.interestRange.max
+                                },
+                                maxTenure: bestOffer.max_tenure_months || mockLoanEligibility.maxTenure,
+                                availableLenders: offers.length
+                            });
+                        }
+                    }
+                } catch (err) {
+                    console.warn('Loan offers not available:', err.message);
+                }
+
+                // Fetch farms and crops
+                try {
+                    const farmsResponse = await getFarmsByFarmer(farmer_id);
+                    if (farmsResponse.success && farmsResponse.data) {
+                        const farms = farmsResponse.data;
+                        
+                        // Fetch crops for all farms
+                        const allCrops = [];
+                        for (const farm of farms) {
+                            try {
+                                const cropsResponse = await getCropsByFarm(farm.farm_id);
+                                if (cropsResponse.success && cropsResponse.data) {
+                                    allCrops.push(...cropsResponse.data);
+                                }
+                            } catch (err) {
+                                console.warn(`Crops not available for farm ${farm.farm_id}`);
+                            }
+                        }
+                        
+                        if (allCrops.length > 0) {
+                            setCrops(allCrops.slice(0, 3).map(crop => ({
+                                name: crop.crop_type,
+                                area: `${crop.sowing_area_acres} acres`,
+                                status: crop.status || 'Growing',
+                                health: 'Healthy', // Can be enhanced with NDVI data
+                                daysToHarvest: crop.expected_harvest_date ? 
+                                    Math.ceil((new Date(crop.expected_harvest_date) - new Date()) / (1000 * 60 * 60 * 24)) : 
+                                    null
+                            })));
+                            
+                            // Fetch weather for first farm
+                            if (farms[0]) {
+                                try {
+                                    const weatherResponse = await fetchWeather(farms[0].farm_id);
+                                    if (weatherResponse.success && weatherResponse.data) {
+                                        const wd = weatherResponse.data;
+                                        setWeather({
+                                            current: {
+                                                temperature: wd.current_temperature || mockWeather.current.temperature,
+                                                condition: wd.weather_condition || mockWeather.current.condition,
+                                                humidity: wd.humidity || mockWeather.current.humidity,
+                                                windSpeed: wd.wind_speed || mockWeather.current.windSpeed
+                                            },
+                                            forecast: wd.forecast || mockWeather.forecast
+                                        });
+                                    }
+                                } catch (err) {
+                                    console.warn('Weather data not available:', err.message);
+                                }
+                            }
+                            
+                            // Fetch market price for first crop
+                            if (allCrops[0]) {
+                                try {
+                                    const priceResponse = await fetchMarketPrice(allCrops[0].crop_type);
+                                    if (priceResponse.success && priceResponse.data) {
+                                        const mp = priceResponse.data;
+                                        setMarketPrice({
+                                            crop: allCrops[0].crop_type,
+                                            price: mp.current_price || mockMarketPrices[0].price,
+                                            trend: mp.trend || mockMarketPrices[0].trend,
+                                            change: mp.price_change || mockMarketPrices[0].change
+                                        });
+                                    }
+                                } catch (err) {
+                                    console.warn('Market price not available:', err.message);
+                                }
+                            }
+                        }
+                    }
+                } catch (err) {
+                    console.warn('Farm/crop data not available:', err.message);
+                }
+
             } catch (err) {
-                console.warn('Backend offline, using mock data');
+                console.error('Error loading dashboard data:', err);
+                setError(err.message);
             } finally {
                 setLoading(false);
             }
@@ -56,9 +198,37 @@ export default function FarmerDashboard() {
         loadData();
     }, []);
 
+    if (loading) {
+        return (
+            <DashboardLayout links={navLinks.farmer} userType="farmer" userName={profile.name}>
+                <div className="farmer-dash" style={{ padding: '2rem', textAlign: 'center' }}>
+                    <p>Loading dashboard data...</p>
+                </div>
+            </DashboardLayout>
+        );
+    }
+
     return (
         <DashboardLayout links={navLinks.farmer} userType="farmer" userName={profile.name}>
             <div className="farmer-dash">
+                {error && (
+                    <motion.div
+                        className="farmer-dash__error"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        style={{ 
+                            padding: '1rem', 
+                            marginBottom: '1rem', 
+                            backgroundColor: '#fee', 
+                            borderRadius: '8px',
+                            color: '#c00'
+                        }}
+                    >
+                        <AlertTriangle size={16} style={{ marginRight: '0.5rem' }} />
+                        Some data could not be loaded. Showing available information.
+                    </motion.div>
+                )}
+                
                 {/* Header */}
                 <motion.div
                     className="farmer-dash__header"
@@ -138,8 +308,8 @@ export default function FarmerDashboard() {
                         <div className="stat-card__content">
                             <span className="stat-card__label">Loan Eligible</span>
                             <div className="stat-card__value-row">
-                                <span className="stat-card__value">₹{(loanEligibility.recommendedAmount / 1000).toFixed(0)}K</span>
-                                <span className="stat-card__sub">@ {loanEligibility.interestRange.min}% p.a.</span>
+                                <span className="stat-card__value">₹{(loanOffers.recommendedAmount / 1000).toFixed(0)}K</span>
+                                <span className="stat-card__sub">@ {loanOffers.interestRange.min}% p.a.</span>
                             </div>
                         </div>
                     </motion.div>
@@ -151,8 +321,8 @@ export default function FarmerDashboard() {
                         <div className="stat-card__content">
                             <span className="stat-card__label">Weather</span>
                             <div className="stat-card__value-row">
-                                <span className="stat-card__value">{weatherData.current.temperature}°C</span>
-                                <span className="stat-card__sub">{weatherData.current.condition}</span>
+                                <span className="stat-card__value">{weather.current.temperature}°C</span>
+                                <span className="stat-card__sub">{weather.current.condition}</span>
                             </div>
                         </div>
                     </motion.div>
@@ -164,8 +334,8 @@ export default function FarmerDashboard() {
                         <div className="stat-card__content">
                             <span className="stat-card__label">Active Crops</span>
                             <div className="stat-card__value-row">
-                                <span className="stat-card__value">{currentCrops.length}</span>
-                                <span className="stat-card__sub">{currentCrops.map(c => c.name).join(', ')}</span>
+                                <span className="stat-card__value">{crops.length}</span>
+                                <span className="stat-card__sub">{crops.map(c => c.name).join(', ')}</span>
                             </div>
                         </div>
                     </motion.div>
@@ -408,26 +578,26 @@ export default function FarmerDashboard() {
                         <div className="loan-card">
                             <div className="loan-card__amount">
                                 <span className="loan-card__label">Recommended Amount</span>
-                                <span className="loan-card__value">₹{loanEligibility.recommendedAmount.toLocaleString()}</span>
+                                <span className="loan-card__value">₹{loanOffers.recommendedAmount.toLocaleString()}</span>
                             </div>
                             <div className="loan-card__details">
                                 <div className="loan-card__detail">
                                     <span>Interest Rate</span>
-                                    <strong>{loanEligibility.interestRange.min}% - {loanEligibility.interestRange.max}%</strong>
+                                    <strong>{loanOffers.interestRange.min}% - {loanOffers.interestRange.max}%</strong>
                                 </div>
                                 <div className="loan-card__detail">
                                     <span>Tenure</span>
-                                    <strong>{loanEligibility.recommendedTenure} months</strong>
+                                    <strong>{loanOffers.maxTenure} months</strong>
                                 </div>
                                 <div className="loan-card__detail">
-                                    <span>Default Prob.</span>
-                                    <strong>{loanEligibility.defaultProbability}%</strong>
+                                    <span>Lenders</span>
+                                    <strong>{loanOffers.availableLenders || 0} available</strong>
                                 </div>
                             </div>
-                            {loanEligibility.microLoanAvailable && (
+                            {loanOffers.microLoanAvailable && (
                                 <div className="loan-card__micro">
                                     <Star size={14} />
-                                    <span>Micro-loan up to ₹{loanEligibility.microLoanMax.toLocaleString()} available</span>
+                                    <span>Micro-loan up to ₹{loanOffers.microLoanMax.toLocaleString()} available</span>
                                 </div>
                             )}
                         </div>
